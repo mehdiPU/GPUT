@@ -22,6 +22,11 @@ set(GPUT_EXTERN_INCLUDE_DIRS
 
 add_library(${PROJECT_NAME} STATIC ${GPUT_SRC_FILES})
 
+# TODO this should be bound to a build configuration
+target_compile_definitions(${PROJECT_NAME}
+   PRIVATE GPUT_DEBUG
+)
+
 foreach(DEPENDENCY IN LISTS GPUT_DEPENDENCIES)
 
    add_subdirectory(${GPUT_DEPENDENCIES_DIR}/${DEPENDENCY})

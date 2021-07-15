@@ -23,6 +23,8 @@
  */
 #pragma once
 
+#include <assert.h>
+
 #include "logger.h"
 
 #define GPUT_LOG_LEVEL_TRACE  LogLevel_TRACE
@@ -156,4 +158,15 @@
 
 #else
    #define GPUT_LOG_FATAL(fmt, ...)
+#endif
+
+#ifdef GPUT_DEBUG
+   #define GPUT_ASSERT(statement, message, ...) { \
+      if (!statement) { \
+         GPUT_LOG_FATAL(message __VA_OPT__(,) __VA_ARGS__); \
+         assert(statement); \
+      } \
+   }
+#else
+   #define GPUT_ASSERT(statement, message, ...)
 #endif

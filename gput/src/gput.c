@@ -38,4 +38,12 @@ bool gput_init()
    GPUT_LOG_WARN("Warn log test");
    GPUT_LOG_ERROR("Error log test");
    GPUT_LOG_FATAL("Fatal log test");
+
+   bool statement = true;
+   GPUT_ASSERT(statement, "Statement should pass the assertion");
+
+   statement = false;
+   GPUT_ASSERT(statement, "Statement should be caught by the assertion");
+
+   puts("This should not be executed");
 }
