@@ -1,0 +1,32 @@
+[
+{
+  "directory": "/home/mehdi/pjcts/GPUT/build/gput",
+  "command": "/usr/bin/cc  -I/home/mehdi/pjcts/GPUT/gput/dependencies/c-logger/src -g -o CMakeFiles/gput.dir/src/gput.c.o -c /home/mehdi/pjcts/GPUT/gput/src/gput.c",
+  "file": "/home/mehdi/pjcts/GPUT/gput/src/gput.c"
+},
+{
+  "directory": "/home/mehdi/pjcts/GPUT/build/gput/dependencies/c-logger",
+  "command": "/usr/bin/cc  -I/home/mehdi/pjcts/GPUT/gput/dependencies/c-logger/src -Wall -std=c89 -g -o CMakeFiles/logger_static.dir/src/logger.c.o -c /home/mehdi/pjcts/GPUT/gput/dependencies/c-logger/src/logger.c",
+  "file": "/home/mehdi/pjcts/GPUT/gput/dependencies/c-logger/src/logger.c"
+},
+{
+  "directory": "/home/mehdi/pjcts/GPUT/build/gput/dependencies/c-logger",
+  "command": "/usr/bin/cc  -I/home/mehdi/pjcts/GPUT/gput/dependencies/c-logger/src -Wall -std=c89 -g -o CMakeFiles/logger_static.dir/src/loggerconf.c.o -c /home/mehdi/pjcts/GPUT/gput/dependencies/c-logger/src/loggerconf.c",
+  "file": "/home/mehdi/pjcts/GPUT/gput/dependencies/c-logger/src/loggerconf.c"
+},
+{
+  "directory": "/home/mehdi/pjcts/GPUT/build/gput/dependencies/c-logger",
+  "command": "/usr/bin/cc -Dlogger_EXPORTS -I/home/mehdi/pjcts/GPUT/gput/dependencies/c-logger/src -Wall -std=c89 -g -fPIC -o CMakeFiles/logger.dir/src/logger.c.o -c /home/mehdi/pjcts/GPUT/gput/dependencies/c-logger/src/logger.c",
+  "file": "/home/mehdi/pjcts/GPUT/gput/dependencies/c-logger/src/logger.c"
+},
+{
+  "directory": "/home/mehdi/pjcts/GPUT/build/gput/dependencies/c-logger",
+  "command": "/usr/bin/cc -Dlogger_EXPORTS -I/home/mehdi/pjcts/GPUT/gput/dependencies/c-logger/src -Wall -std=c89 -g -fPIC -o CMakeFiles/logger.dir/src/loggerconf.c.o -c /home/mehdi/pjcts/GPUT/gput/dependencies/c-logger/src/loggerconf.c",
+  "file": "/home/mehdi/pjcts/GPUT/gput/dependencies/c-logger/src/loggerconf.c"
+},
+{
+  "directory": "/home/mehdi/pjcts/GPUT/build/sandbox",
+  "command": "/usr/bin/cc  -I/home/mehdi/pjcts/GPUT/gput/include -g -o CMakeFiles/sandbox.dir/src/sandbox.c.o -c /home/mehdi/pjcts/GPUT/sandbox/src/sandbox.c",
+  "file": "/home/mehdi/pjcts/GPUT/sandbox/src/sandbox.c"
+}
+]

@@ -1,0 +1,35 @@
+cmake_minimum_required(VERSION 3.10)
+
+project(gput)
+
+set(GPUT_DEPENDENCIES_DIR dependencies)
+
+set(GPUT_DEPENDENCIES
+   "c-logger"
+)
+
+set(GPUT_LINK_LIBS
+   logger_static
+)
+
+set(GPUT_SRC_FILES
+   src/gput.c
+)
+
+set(GPUT_EXTERN_INCLUDE_DIRS
+   include
+)
+
+add_library(${PROJECT_NAME} STATIC ${GPUT_SRC_FILES})
+
+foreach(DEPENDENCY IN LISTS GPUT_DEPENDENCIES)
+
+   add_subdirectory(${GPUT_DEPENDENCIES_DIR}/${DEPENDENCY})
+
+endforeach()
+
+target_include_directories(${PROJECT_NAME}
+   INTERFACE ${GPUT_EXTERN_INCLUDE_DIRS}
+)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE ${GPUT_LINK_LIBS})

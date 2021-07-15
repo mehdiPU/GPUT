@@ -1,0 +1,3 @@
+[submodule "gput/dependencies/c-logger"]
+	path = gput/dependencies/c-logger
+	url = git@github.com:mehdiPU/c-logger.git

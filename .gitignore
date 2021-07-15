@@ -1,3 +1,9 @@
+# ccls
+.ccls-cache/
+
+# build directory
+build/
+
 # Prerequisites
 *.d
 
