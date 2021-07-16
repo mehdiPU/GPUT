@@ -5,11 +5,15 @@ project(gput)
 set(GPUT_DEPENDENCIES_DIR dependencies)
 
 set(GPUT_DEPENDENCIES
-   "c-logger"
+   c-logger
+   glad
 )
 
 set(GPUT_LINK_LIBS
+   EGL
+   gbm
    logger_static
+   glad
 )
 
 set(GPUT_SRC_FILES
@@ -37,4 +41,4 @@ target_include_directories(${PROJECT_NAME}
    INTERFACE ${GPUT_EXTERN_INCLUDE_DIRS}
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE ${GPUT_LINK_LIBS})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${GPUT_LINK_LIBS})

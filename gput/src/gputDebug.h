@@ -25,6 +25,8 @@
 
 #include <assert.h>
 
+#include <libgen.h>
+
 #include "logger.h"
 
 #define GPUT_LOG_LEVEL_TRACE  LogLevel_TRACE
@@ -92,7 +94,7 @@
 
    #define GPUT_LOG_TRACE(fmt, ...) \
       logger_log( \
-         GPUT_LOG_LEVEL_TRACE, __FILE__, __LINE__, \
+         GPUT_LOG_LEVEL_TRACE, basename(__FILE__), __LINE__, \
          fmt __VA_OPT__(,) __VA_ARGS__ \
       )
 
@@ -104,7 +106,7 @@
 
    #define GPUT_LOG_DEBUG(fmt, ...) \
       logger_log( \
-         GPUT_LOG_LEVEL_DEBUG, __FILE__, __LINE__, \
+         GPUT_LOG_LEVEL_DEBUG, basename(__FILE__), __LINE__, \
          fmt __VA_OPT__(,) __VA_ARGS__ \
       )
 
@@ -116,7 +118,7 @@
 
    #define GPUT_LOG_INFO(fmt, ...) \
       logger_log( \
-         GPUT_LOG_LEVEL_INFO, __FILE__, __LINE__, \
+         GPUT_LOG_LEVEL_INFO, basename(__FILE__), __LINE__, \
          fmt __VA_OPT__(,) __VA_ARGS__ \
       )
 
@@ -128,7 +130,7 @@
 
    #define GPUT_LOG_WARN(fmt, ...) \
       logger_log( \
-         GPUT_LOG_LEVEL_WARN, __FILE__, __LINE__, \
+         GPUT_LOG_LEVEL_WARN, basename(__FILE__), __LINE__, \
          fmt __VA_OPT__(,) __VA_ARGS__ \
       )
 
@@ -140,7 +142,7 @@
 
    #define GPUT_LOG_ERROR(fmt, ...) \
       logger_log( \
-         GPUT_LOG_LEVEL_ERROR, __FILE__, __LINE__, \
+         GPUT_LOG_LEVEL_ERROR, basename(__FILE__), __LINE__, \
          fmt __VA_OPT__(,) __VA_ARGS__ \
       )
 
@@ -152,7 +154,7 @@
 
    #define GPUT_LOG_FATAL(fmt, ...) \
       logger_log( \
-         GPUT_LOG_LEVEL_FATAL, __FILE__, __LINE__, \
+         GPUT_LOG_LEVEL_FATAL, basename(__FILE__), __LINE__, \
          fmt __VA_OPT__(,) __VA_ARGS__ \
       )
 
@@ -162,7 +164,7 @@
 
 #ifdef GPUT_DEBUG
    #define GPUT_ASSERT(statement, message, ...) { \
-      if (!statement) { \
+      if (!(statement)) { \
          GPUT_LOG_FATAL(message __VA_OPT__(,) __VA_ARGS__); \
          assert(statement); \
       } \

@@ -23,4 +23,10 @@
  */
 #pragma once
 
-void gput_init();
+#include <stdbool.h>
+
+bool gput_init();
+
+bool gput_terminate();
+
+void gput_test();
