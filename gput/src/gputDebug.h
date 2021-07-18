@@ -24,8 +24,11 @@
 #pragma once
 
 #include <assert.h>
+#include <stdbool.h>
 
 #include <libgen.h>
+
+#include "glad/glad.h"
 
 #include "logger.h"
 
@@ -162,13 +165,29 @@
    #define GPUT_LOG_FATAL(fmt, ...)
 #endif
 
+const char* getGlErrorStr(int errorCode);
+
 #ifdef GPUT_DEBUG
-   #define GPUT_ASSERT(statement, message, ...) { \
-      if (!(statement)) { \
+
+   #define GPUT_ASSERT(statement, message, ...) \
+   { \
+      bool asserted = statement; \
+      if (!asserted) { \
          GPUT_LOG_FATAL(message __VA_OPT__(,) __VA_ARGS__); \
-         assert(statement); \
+         assert(asserted); \
       } \
+   }
+
+   #define GLC(glCall) \
+      glCall; \
+   { \
+      GLint glErrorCode = glGetError(); \
+      GPUT_ASSERT(glErrorCode == GL_NO_ERROR, \
+         "Error %s en GL call %s", \
+          getGlErrorStr(glErrorCode), #glCall \
+      ) \
    }
 #else
    #define GPUT_ASSERT(statement, message, ...)
+   #define GLC(glCall)
 #endif

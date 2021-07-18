@@ -82,7 +82,7 @@ bool gput_init()
    )
 
    const EGLint eglConfigAttribs[] = {
-      EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+      EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT_KHR,
       EGL_NONE
    };
 
@@ -98,7 +98,7 @@ bool gput_init()
    GPUT_ASSERT(returnVal, "Failed to bind OpenGL API to EGL");
 
    const EGLint contextAttribs[] = {
-      EGL_CONTEXT_CLIENT_VERSION, 2,
+      EGL_CONTEXT_CLIENT_VERSION, 3,
       EGL_NONE
    };
    coreContext = eglCreateContext(
@@ -119,10 +119,12 @@ bool gput_init()
 
 void gput_test()
 {
-   const char* glVersion = glGetString(GL_VERSION);
+   const char* glVersion = GLC(glGetString(GL_VERSION));
    GPUT_LOG_INFO("OpenGL version: %s", glVersion);
 
-   const char* glslVersion = glGetString(GL_SHADING_LANGUAGE_VERSION);
+   GLC(glBindBuffer(0, 0));
+
+   const char* glslVersion = GLC(glGetString(GL_SHADING_LANGUAGE_VERSION));
    GPUT_LOG_INFO("GLSL version: %s", glslVersion);
 }
 
