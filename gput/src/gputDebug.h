@@ -189,5 +189,5 @@ const char* getGlErrorStr(int errorCode);
    }
 #else
    #define GPUT_ASSERT(statement, message, ...)
-   #define GLC(glCall)
+   #define GLC(glCall) glCall
 #endif
