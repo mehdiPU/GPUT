@@ -117,15 +117,49 @@ bool gput_init()
    return true;
 }
 
+float data[8][8];
+
 void gput_test()
 {
    const char* glVersion = GLC(glGetString(GL_VERSION));
    GPUT_LOG_INFO("OpenGL version: %s", glVersion);
 
-   GLC(glBindBuffer(0, 0));
-
    const char* glslVersion = GLC(glGetString(GL_SHADING_LANGUAGE_VERSION));
    GPUT_LOG_INFO("GLSL version: %s", glslVersion);
+
+   GLuint fbo;
+   GLC(glGenFramebuffers(1, &fbo));
+   GLC(glBindFramebuffer(GL_FRAMEBUFFER, fbo));
+
+   GLuint texture;
+   GLC(glGenTextures(1, &texture));
+   GLC(glBindTexture(GL_TEXTURE_2D, texture));
+   GLC(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 8, 8, 0, GL_RED, GL_FLOAT, NULL));
+
+   GLC(glFramebufferTexture2D(
+      GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0
+   ));
+
+   GLC(GPUT_ASSERT(
+      glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,
+      "Framebuffer not complete"
+   ));
+
+   GLC(glClearColor(1.3f, 1.3f, 1.3f, 1.3f))
+   GLC(glClear(GL_COLOR_BUFFER_BIT));
+
+   GLC(glReadPixels(0, 0, 8, 8, GL_RED, GL_FLOAT, data));
+
+   putchar('\n');
+   for (int i = 0; i < 8; i++) {
+      for (int j = 0; j < 8; j++) {
+         printf("%2.2f ", data[i][j]);
+      }
+      putchar('\n');
+   }
+
+   GLC(glDeleteFramebuffers(1, &fbo));
+   GLC(glDeleteTextures(1, &texture))
 }
 
 bool gput_terminate()
