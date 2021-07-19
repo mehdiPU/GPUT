@@ -117,7 +117,7 @@ bool gput_init()
    return true;
 }
 
-float data[8][8];
+float data[8][8][4];
 
 void gput_test()
 {
@@ -127,6 +127,66 @@ void gput_test()
    const char* glslVersion = GLC(glGetString(GL_SHADING_LANGUAGE_VERSION));
    GPUT_LOG_INFO("GLSL version: %s", glslVersion);
 
+   const char* VSSrc = "#version 310 es\n"
+      "layout (location = 0) in vec3 aPos;\n"
+      "out lowp vec4 color;"
+      "void main()"
+      "{"
+      "  color = vec4(1.0, 1.0, 1.0, 1.0);"
+      "  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);"
+      "}\n";
+
+   puts(VSSrc);
+
+   GLuint VSid = GLC(glCreateShader(GL_VERTEX_SHADER));
+   GLC(glShaderSource(VSid, 1, &VSSrc, NULL));
+   GLC(glCompileShader(VSid));
+
+
+   int success;
+   GLC(glGetShaderiv(VSid, GL_COMPILE_STATUS, &success));
+   if (!success) {
+      char infolog[1024];
+      GLC(glGetShaderInfoLog(VSid, 1024, NULL, infolog));
+      GPUT_LOG_ERROR("Shader compile error \n %s", infolog);
+   }
+
+   puts("VS fine");
+   const char* FSSrc = "#version 310 es\n"
+   ""
+   "in lowp vec4 color;"
+   "out lowp vec4 FragColor;\n"
+   "void main()\n"
+   "{\n"
+   "  FragColor = color;\n"
+   "}\n";;
+
+   puts(FSSrc);
+
+   GLuint FSid = GLC(glCreateShader(GL_FRAGMENT_SHADER));
+   GLC(glShaderSource(FSid, 1, &FSSrc, NULL));
+   GLC(glCompileShader(FSid));
+
+   GLC(glGetShaderiv(FSid, GL_COMPILE_STATUS, &success));
+   if (!success) {
+      char infolog[1024];
+      GLC(glGetShaderInfoLog(FSid, 1024, NULL, infolog));
+      GPUT_LOG_ERROR("Shader compile error \n %s", infolog);
+   }
+
+
+   GLuint ShProgId = GLC(glCreateProgram());
+   GLC(glAttachShader(ShProgId, VSid));
+   GLC(glAttachShader(ShProgId, FSid));
+   GLC(glLinkProgram(ShProgId));
+
+   GLC(glGetProgramiv(ShProgId, GL_LINK_STATUS, &success));
+   if (!success) {
+      char infolog[1024];
+      GLC(glGetProgramInfoLog(ShProgId, 1024, NULL, infolog));
+      GPUT_LOG_ERROR("Shader link error: \n%s", infolog);
+   }
+
    GLuint fbo;
    GLC(glGenFramebuffers(1, &fbo));
    GLC(glBindFramebuffer(GL_FRAMEBUFFER, fbo));
@@ -134,10 +194,21 @@ void gput_test()
    GLuint texture;
    GLC(glGenTextures(1, &texture));
    GLC(glBindTexture(GL_TEXTURE_2D, texture));
-   GLC(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, 8, 8, 0, GL_RED, GL_FLOAT, NULL));
+   GLC(glTexImage2D(
+      GL_TEXTURE_2D, 0, GL_RGBA32F, 8, 8, 0, GL_RGBA, GL_FLOAT, NULL
+   ));
 
    GLC(glFramebufferTexture2D(
       GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0
+   ));
+
+   GLuint rbo;
+   GLC(glGenRenderbuffers(1, &rbo));
+   GLC(glBindRenderbuffer(GL_RENDERBUFFER, rbo));
+   GLC(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 8, 8));
+
+   GLC(glFramebufferRenderbuffer(
+      GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo
    ));
 
    GLC(GPUT_ASSERT(
@@ -145,15 +216,46 @@ void gput_test()
       "Framebuffer not complete"
    ));
 
-   GLC(glClearColor(1.3f, 1.3f, 1.3f, 1.3f))
+   float vertices[] = {
+      -0.5f, -0.5f, 0.0f,
+       0.5f, -0.5f, 0.0f,
+       0.0f,  0.5f, 0.0f
+   };
+
+   unsigned int vbo;
+   GLC(glGenBuffers(1, &vbo));
+   GLC(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+   GLC(glBufferData(
+      GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW
+   ));
+
+   GLuint vao;
+   GLC(glGenVertexArrays(1, &vao));
+   GLC(glBindVertexArray(vao));
+
+   GLC(glBindBuffer(GL_ARRAY_BUFFER, vbo))
+
+   GLC(glEnableVertexAttribArray(0));
+   GLC(glVertexAttribPointer(
+      0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0
+   ));
+
+   GLC(glClearColor(0.1f, 0.2f, 0.3f, 1.0f))
    GLC(glClear(GL_COLOR_BUFFER_BIT));
 
-   GLC(glReadPixels(0, 0, 8, 8, GL_RED, GL_FLOAT, data));
+   GLC(glUseProgram(ShProgId));
+   GLC(glBindVertexArray(vao));
+
+   GLC(glDrawArrays(GL_TRIANGLES, 0, 3));
+
+   GLC(glReadPixels(0, 0, 8, 8, GL_RGBA, GL_FLOAT, data));
 
    putchar('\n');
    for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
-         printf("%2.2f ", data[i][j]);
+         printf("[%2.1f %2.1f %2.1f %2.1f]",
+            data[i][j][0], data[i][j][1], data[i][j][2], data[i][j][3]
+         );
       }
       putchar('\n');
    }
