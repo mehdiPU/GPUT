@@ -132,11 +132,10 @@ void gput_test()
       "out lowp vec4 color;"
       "void main()"
       "{"
-      "  color = vec4(1.0, 1.0, 1.0, 1.0);"
+      "  color = vec4(1.1, 1.1, 1.1, 1.1);"
       "  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);"
       "}\n";
 
-   puts(VSSrc);
 
    GLuint VSid = GLC(glCreateShader(GL_VERTEX_SHADER));
    GLC(glShaderSource(VSid, 1, &VSSrc, NULL));
@@ -151,7 +150,6 @@ void gput_test()
       GPUT_LOG_ERROR("Shader compile error \n %s", infolog);
    }
 
-   puts("VS fine");
    const char* FSSrc = "#version 310 es\n"
    ""
    "in lowp vec4 color;"
@@ -160,8 +158,6 @@ void gput_test()
    "{\n"
    "  FragColor = color;\n"
    "}\n";;
-
-   puts(FSSrc);
 
    GLuint FSid = GLC(glCreateShader(GL_FRAGMENT_SHADER));
    GLC(glShaderSource(FSid, 1, &FSSrc, NULL));
@@ -217,10 +213,18 @@ void gput_test()
    ));
 
    float vertices[] = {
-      -0.5f, -0.5f, 0.0f,
-       0.5f, -0.5f, 0.0f,
-       0.0f,  0.5f, 0.0f
+       1.0f,  1.0f, 0.0f,
+      -1.0f,  1.0f, 0.0f,
+       0.0f, -1.0f, 0.0f
    };
+
+   int indices[] = {
+      0, 1, 2
+   };
+
+   GLuint vao;
+   GLC(glGenVertexArrays(1, &vao));
+   GLC(glBindVertexArray(vao));
 
    unsigned int vbo;
    GLC(glGenBuffers(1, &vbo));
@@ -229,31 +233,39 @@ void gput_test()
       GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW
    ));
 
-   GLuint vao;
-   GLC(glGenVertexArrays(1, &vao));
-   GLC(glBindVertexArray(vao));
+   GLuint ebo;
+   GLC(glGenBuffers(1, &ebo));
+   GLC(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
+   GLC(glBufferData(
+      GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW
+   ));
+
 
    GLC(glBindBuffer(GL_ARRAY_BUFFER, vbo))
+   GLC(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
+
 
    GLC(glEnableVertexAttribArray(0));
    GLC(glVertexAttribPointer(
       0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0
    ));
 
-   GLC(glClearColor(0.1f, 0.2f, 0.3f, 1.0f))
+   GLC(glViewport(0, 0, 8, 8));
+
+   GLC(glClearColor(0.0f, 0.0f, 0.0f, 0.0f))
    GLC(glClear(GL_COLOR_BUFFER_BIT));
 
    GLC(glUseProgram(ShProgId));
    GLC(glBindVertexArray(vao));
-
-   GLC(glDrawArrays(GL_TRIANGLES, 0, 3));
+//
+   GLC(glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0));
 
    GLC(glReadPixels(0, 0, 8, 8, GL_RGBA, GL_FLOAT, data));
 
    putchar('\n');
    for (int i = 0; i < 8; i++) {
       for (int j = 0; j < 8; j++) {
-         printf("[%2.1f %2.1f %2.1f %2.1f]",
+         printf("[%1.0f %1.0f %1.0f %1.0f]",
             data[i][j][0], data[i][j][1], data[i][j][2], data[i][j][3]
          );
       }
