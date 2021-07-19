@@ -19,6 +19,7 @@ set(GPUT_LINK_LIBS
 set(GPUT_SRC_FILES
    src/gput.c
    src/gputDebug.c
+   src/GlAbstract.c
 )
 
 set(GPUT_EXTERN_INCLUDE_DIRS

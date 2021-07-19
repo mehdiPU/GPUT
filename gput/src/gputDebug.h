@@ -187,7 +187,14 @@ const char* getGlErrorStr(int errorCode);
           getGlErrorStr(glErrorCode), #glCall \
       ) \
    }
+
+   #define GPUT_DEBUG_SCOPE(debugCode) \
+   { \
+      debugCode \
+   }
+
 #else
    #define GPUT_ASSERT(statement, message, ...)
    #define GLC(glCall) glCall
+   #define GPUT_DEBUG_SCOPE(debugCode)
 #endif

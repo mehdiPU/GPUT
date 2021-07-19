@@ -36,6 +36,7 @@
 #include <EGL/eglext.h>
 
 #include "gputDebug.h"
+#include "GlAbstract.h"
 
 typedef struct gbm_device GbmDevice;
 typedef int DriDeviceFD;
@@ -136,19 +137,7 @@ void gput_test()
       "  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);"
       "}\n";
 
-
-   GLuint VSid = GLC(glCreateShader(GL_VERTEX_SHADER));
-   GLC(glShaderSource(VSid, 1, &VSSrc, NULL));
-   GLC(glCompileShader(VSid));
-
-
-   int success;
-   GLC(glGetShaderiv(VSid, GL_COMPILE_STATUS, &success));
-   if (!success) {
-      char infolog[1024];
-      GLC(glGetShaderInfoLog(VSid, 1024, NULL, infolog));
-      GPUT_LOG_ERROR("Shader compile error \n %s", infolog);
-   }
+   GlShaderId VSid = gla_createShader(VERTEX_SHADER, &VSSrc, 1);
 
    const char* FSSrc = "#version 310 es\n"
    ""
@@ -157,31 +146,11 @@ void gput_test()
    "void main()\n"
    "{\n"
    "  FragColor = color;\n"
-   "}\n";;
+   "}\n";
 
-   GLuint FSid = GLC(glCreateShader(GL_FRAGMENT_SHADER));
-   GLC(glShaderSource(FSid, 1, &FSSrc, NULL));
-   GLC(glCompileShader(FSid));
+   GlShaderId FSid = gla_createShader(FRAGMENT_SHADER, &FSSrc, 1);
 
-   GLC(glGetShaderiv(FSid, GL_COMPILE_STATUS, &success));
-   if (!success) {
-      char infolog[1024];
-      GLC(glGetShaderInfoLog(FSid, 1024, NULL, infolog));
-      GPUT_LOG_ERROR("Shader compile error \n %s", infolog);
-   }
-
-
-   GLuint ShProgId = GLC(glCreateProgram());
-   GLC(glAttachShader(ShProgId, VSid));
-   GLC(glAttachShader(ShProgId, FSid));
-   GLC(glLinkProgram(ShProgId));
-
-   GLC(glGetProgramiv(ShProgId, GL_LINK_STATUS, &success));
-   if (!success) {
-      char infolog[1024];
-      GLC(glGetProgramInfoLog(ShProgId, 1024, NULL, infolog));
-      GPUT_LOG_ERROR("Shader link error: \n%s", infolog);
-   }
+   GlProgId ShProgId = gla_linkProgram(VSid, FSid);
 
    GLuint fbo;
    GLC(glGenFramebuffers(1, &fbo));
@@ -272,6 +241,9 @@ void gput_test()
       putchar('\n');
    }
 
+   gla_deleteShader(VSid);
+   gla_deleteShader(FSid);
+   gla_deleteProgram(ShProgId);
    GLC(glDeleteFramebuffers(1, &fbo));
    GLC(glDeleteTextures(1, &texture))
 }
