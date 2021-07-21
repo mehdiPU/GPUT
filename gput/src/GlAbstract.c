@@ -95,3 +95,25 @@ void gla_deleteProgram(GlProgId progId)
    )
    GLC(glDeleteProgram(progId))
 }
+
+GlBuffId gla_createBuffer(
+   BufferType bufferType, const void* bufferData, size_t size
+){
+   GlBuffId BufferId;
+   GLC(glGenBuffers(1, &BufferId));
+   GLC(glBindBuffer(bufferType, BufferId));
+   GLC(glBufferData(bufferType, size, bufferData, GL_STATIC_DRAW));
+   GLC(glBindBuffer(bufferType, 0));
+   return BufferId;
+}
+
+void gla_bindBuffer(BufferType bufferType, GlBuffId bufferId)
+{
+   GLC(glBindBuffer(bufferType, bufferId));
+}
+
+void gla_deleteBuffer(GlBuffId bufferId)
+{
+   GlBuffId localBufferId = bufferId;
+   GLC(glDeleteBuffers(1, &localBufferId));
+}

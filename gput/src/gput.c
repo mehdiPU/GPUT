@@ -191,28 +191,19 @@ void gput_test()
       0, 1, 2
    };
 
+   GlBuffId vertexBuffer = gla_createBuffer(
+      VERTEX_BUFFER, vertices, sizeof(vertices)
+   );
+   GlBuffId indexBuffer = gla_createBuffer(
+      INDEX_BUFFER, indices, sizeof(indices)
+   );
+
    GLuint vao;
    GLC(glGenVertexArrays(1, &vao));
    GLC(glBindVertexArray(vao));
 
-   unsigned int vbo;
-   GLC(glGenBuffers(1, &vbo));
-   GLC(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-   GLC(glBufferData(
-      GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW
-   ));
-
-   GLuint ebo;
-   GLC(glGenBuffers(1, &ebo));
-   GLC(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
-   GLC(glBufferData(
-      GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW
-   ));
-
-
-   GLC(glBindBuffer(GL_ARRAY_BUFFER, vbo))
-   GLC(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
-
+   gla_bindBuffer(VERTEX_BUFFER, vertexBuffer);
+   gla_bindBuffer(INDEX_BUFFER, indexBuffer);
 
    GLC(glEnableVertexAttribArray(0));
    GLC(glVertexAttribPointer(
