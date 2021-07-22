@@ -305,3 +305,35 @@ void gla_deleteTexture(GlTexId textureId)
    GlTexId localTextureId = textureId;
    GLC(glDeleteTextures(1, &localTextureId));
 }
+
+GlFramebufferId gla_createFramebuffer(GlTexId colorAttachment)
+{
+   GlFramebufferId framebufferId;
+   GLC(glGenFramebuffers(1, &framebufferId));
+   GLC(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
+   GLC(glFramebufferTexture2D(
+      GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorAttachment, 0
+   ));
+   GLC(GPUT_ASSERT(
+      glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,
+      "Framebuffer not complete"
+   ));
+   GLC(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+   return framebufferId;
+}
+
+void gla_bindFramebuffer(GlFramebufferId framebufferId)
+{
+   GLC(glBindFramebuffer(GL_FRAMEBUFFER, framebufferId));
+}
+
+void gla_unbindFramebuffer()
+{
+   GLC(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+}
+
+void gla_deleteFramebuffer(GlFramebufferId framebufferId)
+{
+   GlFramebufferId localFramebufferId = framebufferId;
+   GLC(glDeleteFramebuffers(1, &localFramebufferId));
+}

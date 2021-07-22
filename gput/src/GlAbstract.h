@@ -31,6 +31,7 @@ typedef GLuint GlShaderId;
 typedef GLuint GlProgId;
 typedef GLuint GlBuffId;
 typedef GLuint GlTexId;
+typedef GLuint GlFramebufferId;
 
 typedef enum {
    VERTEX_SHADER = GL_VERTEX_SHADER,
@@ -113,3 +114,11 @@ void gla_bindTexture(GlTexId textureId);
 void gla_unbindTexture();
 
 void gla_deleteTexture(GlTexId textureId);
+
+GlFramebufferId gla_createFramebuffer(GlTexId colorAttachment);
+
+void gla_bindFramebuffer(GlFramebufferId framebufferId);
+
+void gla_unbindFramebuffer();
+
+void gla_deleteFramebuffer(GlFramebufferId framebufferId);

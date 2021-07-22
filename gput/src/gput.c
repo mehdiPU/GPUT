@@ -118,7 +118,7 @@ bool gput_init()
    return true;
 }
 
-char data[5][5][4];
+int data[5][5][4];
 
 void gput_test()
 {
@@ -149,20 +149,9 @@ void gput_test()
 
    GlProgId ShProgId = gla_linkProgram(VSid, FSid);
 
-   GLuint fbo;
-   GLC(glGenFramebuffers(1, &fbo));
-   GLC(glBindFramebuffer(GL_FRAMEBUFFER, fbo));
+   GlTexId textureId = gla_createTexture(PIX_4_32I, 5, 5, data);
 
-   GlTexId texture = gla_createTexture(PIX_4_8I, 5, 5, data);
-
-   GLC(glFramebufferTexture2D(
-      GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0
-   ));
-
-   GLC(GPUT_ASSERT(
-      glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE,
-      "Framebuffer not complete"
-   ));
+   GlFramebufferId framebufferId = gla_createFramebuffer(textureId);
 
    float vertices[] = {
        1.0f,  1.0f, 0.0f,
@@ -195,6 +184,7 @@ void gput_test()
 
    GLC(glViewport(0, 0, 5, 5));
 
+   gla_bindFramebuffer(framebufferId);
    gla_bindProgram(ShProgId);
    GLC(glBindVertexArray(vao));
 
@@ -219,13 +209,13 @@ void gput_test()
 
    GPUT_LOG_INFO("%-10s%-10s", "macros", "returned");
    GPUT_LOG_INFO("%-10p%-10p", GL_RGBA_INTEGER, readFormat);
-   GPUT_LOG_INFO("%-10p%-10p", GL_BYTE, readType);
+   GPUT_LOG_INFO("%-10p%-10p", GL_INT, readType);
 
    gla_deleteShader(VSid);
    gla_deleteShader(FSid);
    gla_deleteProgram(ShProgId);
-   GLC(glDeleteFramebuffers(1, &fbo));
-   gla_deleteTexture(texture);
+   gla_deleteFramebuffer(framebufferId);
+   gla_deleteTexture(textureId);
 }
 
 bool gput_terminate()
