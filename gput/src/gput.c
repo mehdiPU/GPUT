@@ -149,7 +149,7 @@ void gput_test()
 
    GlProgId ShProgId = gla_linkProgram(VSid, FSid);
 
-   GlTexId textureId = gla_createTexture(PIX_4_32I, 5, 5, data);
+   GlTexId textureId = gla_createTexture(VEC4_I32, 5, 5, data);
 
    GlFramebufferId framebufferId = gla_createFramebuffer(textureId);
 
@@ -170,9 +170,9 @@ void gput_test()
       INDEX_BUFFER, indices, sizeof(indices)
    );
 
-   GLuint vao;
-   GLC(glGenVertexArrays(1, &vao));
-   GLC(glBindVertexArray(vao));
+   //GLuint vao;
+   //GLC(glGenVertexArrays(1, &vao));
+   //GLC(glBindVertexArray(vao));
 
    gla_bindBuffer(VERTEX_BUFFER, vertexBuffer);
    gla_bindBuffer(INDEX_BUFFER, indexBuffer);
@@ -186,7 +186,7 @@ void gput_test()
 
    gla_bindFramebuffer(framebufferId);
    gla_bindProgram(ShProgId);
-   GLC(glBindVertexArray(vao));
+   //GLC(glBindVertexArray(vao));
 
    GLC(glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0));
 

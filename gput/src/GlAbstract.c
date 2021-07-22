@@ -25,6 +25,83 @@
 #include "GlAbstract.h"
 #include "gputDebug.h"
 
+typedef struct {
+   int size;
+   GLenum glType;
+   GLenum glFormat;
+   GLenum glInternalFormat;
+} DataTypeInfo;
+
+static const DataTypeInfo dataTypesInfo[] = {
+   // I8
+   {sizeof(GLbyte),        GL_BYTE,             GL_RED_INTEGER,   GL_R8I},
+   // I16
+   {sizeof(GLshort),       GL_SHORT,            GL_RED_INTEGER,   GL_R16I},
+   // I32
+   {sizeof(GLint),         GL_INT,              GL_RED_INTEGER,   GL_R32I},
+   // F16
+   {sizeof(GLhalf),        GL_HALF_FLOAT,       GL_RED,           GL_R16F},
+   // F32
+   {sizeof(GLfloat),       GL_FLOAT,            GL_RED,           GL_R32F},
+   // UI8
+   {sizeof(GLubyte),       GL_UNSIGNED_BYTE,    GL_RED_INTEGER,   GL_R8UI},
+   //UI16
+   {sizeof(GLushort),      GL_UNSIGNED_SHORT,   GL_RED_INTEGER,   GL_R16UI},
+   //UI32
+   {sizeof(GLuint),        GL_UNSIGNED_INT,     GL_RED_INTEGER,   GL_R32UI},
+
+   // VEC2_I8
+   {2 * sizeof(GLbyte),    GL_BYTE,             GL_RG_INTEGER,    GL_RG8I},
+   // VEC2_I16
+   {2 * sizeof(GLshort),   GL_SHORT,            GL_RG_INTEGER,    GL_RG16I},
+   // VEC2_I32
+   {2 * sizeof(GLint),     GL_INT,              GL_RG_INTEGER,    GL_RG32I},
+   // VEC2_F16
+   {2 * sizeof(GLhalf),    GL_HALF_FLOAT,       GL_RG,            GL_RG16F},
+   // VEC2_F32
+   {2 * sizeof(GLfloat),   GL_FLOAT,            GL_RG,            GL_RG32F},
+   // VEC2_UI8
+   {2 * sizeof(GLubyte),   GL_UNSIGNED_BYTE,    GL_RG_INTEGER,    GL_RG8UI},
+   // VEC2_UI16
+   {2 * sizeof(GLushort),  GL_UNSIGNED_SHORT,   GL_RG_INTEGER,    GL_RG16UI},
+   // VEC2_UI32
+   {2 * sizeof(GLuint),    GL_UNSIGNED_INT,     GL_RG_INTEGER,    GL_RG32UI},
+
+   // VEC3_I8
+   {3 * sizeof(GLbyte),    GL_BYTE,             GL_RGB_INTEGER,   GL_RGB8I},
+   // VEC3_I16
+   {3 * sizeof(GLshort),   GL_SHORT,            GL_RGB_INTEGER,   GL_RGB16I},
+   // VEC3_I32
+   {3 * sizeof(GLint),     GL_INT,              GL_RGB_INTEGER,   GL_RGB32I},
+   // VEC3_F16
+   {3 * sizeof(GLhalf),    GL_HALF_FLOAT,       GL_RGB,           GL_RGB16F},
+   // VEC3_F32
+   {3 * sizeof(GLfloat),   GL_FLOAT,            GL_RGB,           GL_RGB32F},
+   // VEC3_UI8
+   {3 * sizeof(GLubyte),   GL_UNSIGNED_BYTE,    GL_RGB_INTEGER,   GL_RGB8UI},
+   // VEC3_UI16
+   {3 * sizeof(GLushort),  GL_UNSIGNED_SHORT,   GL_RGB_INTEGER,   GL_RGB16UI},
+   // VEC3_UI32
+   {3 * sizeof(GLuint),    GL_UNSIGNED_INT,     GL_RGB_INTEGER,   GL_RGB32UI},
+
+   // VEC4_I8
+   {4 * sizeof(GLbyte),    GL_BYTE,             GL_RGBA_INTEGER,  GL_RGBA8I},
+   // VEC4_I16
+   {4 * sizeof(GLshort),   GL_SHORT,            GL_RGBA_INTEGER,  GL_RGBA16I},
+   // VEC4_I32
+   {4 * sizeof(GLint),     GL_INT,              GL_RGBA_INTEGER,  GL_RGBA32I},
+   // VEC4_F16
+   {4 * sizeof(GLhalf),    GL_HALF_FLOAT,       GL_RGBA,          GL_RGBA16F},
+   // VEC4_F32
+   {4 * sizeof(GLfloat),   GL_FLOAT,            GL_RGBA,          GL_RGBA32F},
+   // VEC4_UI8
+   {4 * sizeof(GLubyte),   GL_UNSIGNED_BYTE,    GL_RGBA_INTEGER,  GL_RGBA8UI},
+   // VEC4_UI16
+   {4 * sizeof(GLushort),  GL_UNSIGNED_SHORT,   GL_RGBA_INTEGER,  GL_RGBA16UI},
+   // VEC4_UI32
+   {4 * sizeof(GLuint),    GL_UNSIGNED_INT,     GL_RGBA_INTEGER,  GL_RGBA32UI},
+};
+
 #define INFOLOG_SIZE 512
 
 char infolog[INFOLOG_SIZE];
@@ -133,157 +210,20 @@ void gla_deleteBuffer(GlBuffId bufferId)
    GLC(glDeleteBuffers(1, &localBufferId));
 }
 
-static void gla_getGlPixFormatAndType(
-   PixelFormat pixFormat, GLenum* format, GLenum* type
-){
-   switch (pixFormat) {
-   case PIX_1_8I:
-      *format = GL_RED_INTEGER;
-      *type = GL_BYTE;
-   break;
-   case PIX_1_8UI:
-      *format = GL_RED_INTEGER;
-      *type = GL_UNSIGNED_BYTE;
-   break;
-   case PIX_1_16I:
-      *format = GL_RED_INTEGER;
-      *type = GL_SHORT;
-   break;
-   case PIX_1_16UI:
-      *format = GL_RED_INTEGER;
-      *type = GL_UNSIGNED_SHORT;
-   break;
-   case PIX_1_32I:
-      *format = GL_RED_INTEGER;
-      *type = GL_INT;
-   break;
-   case PIX_1_32UI:
-      *format = GL_RED_INTEGER;
-      *type = GL_UNSIGNED_INT;
-   break;
-   case PIX_1_16F:
-      *format = GL_RED;
-      *type = GL_HALF_FLOAT;
-   break;
-   case PIX_1_32F:
-      *format = GL_RED;
-      *type = GL_FLOAT;
-   break;
-
-   case PIX_2_8I:
-      *format = GL_RG_INTEGER;
-      *type = GL_BYTE;
-   break;
-   case PIX_2_8UI:
-      *format = GL_RG_INTEGER;
-      *type = GL_UNSIGNED_BYTE;
-   break;
-   case PIX_2_16I:
-      *format = GL_RG_INTEGER;
-      *type = GL_SHORT;
-   break;
-   case PIX_2_16UI:
-      *format = GL_RG_INTEGER;
-      *type = GL_UNSIGNED_SHORT;
-   break;
-   case PIX_2_32I:
-      *format = GL_RG_INTEGER;
-      *type = GL_INT;
-   break;
-   case PIX_2_32UI:
-      *format = GL_RG_INTEGER;
-      *type = GL_UNSIGNED_INT;
-   break;
-   case PIX_2_16F:
-      *format = GL_RG;
-      *type = GL_HALF_FLOAT;
-   break;
-   case PIX_2_32F:
-      *format = GL_RG;
-      *type = GL_FLOAT;
-   break;
-
-   case PIX_3_8I:
-      *format = GL_RGB_INTEGER;
-      *type = GL_BYTE;
-   break;
-   case PIX_3_8UI:
-      *format = GL_RGB_INTEGER;
-      *type = GL_UNSIGNED_BYTE;
-   break;
-   case PIX_3_16I:
-      *format = GL_RGB_INTEGER;
-      *type = GL_SHORT;
-   break;
-   case PIX_3_16UI:
-      *format = GL_RGB_INTEGER;
-      *type = GL_UNSIGNED_SHORT;
-   break;
-   case PIX_3_32I:
-      *format = GL_RGB_INTEGER;
-      *type = GL_INT;
-   break;
-   case PIX_3_32UI:
-      *format = GL_RGB_INTEGER;
-      *type = GL_UNSIGNED_INT;
-   break;
-   case PIX_3_16F:
-      *format = GL_RGB;
-      *type = GL_HALF_FLOAT;
-   break;
-   case PIX_3_32F:
-      *format = GL_RGB;
-      *type = GL_FLOAT;
-   break;
-
-   case PIX_4_8I:
-      *format = GL_RGBA_INTEGER;
-      *type = GL_BYTE;
-   break;
-   case PIX_4_8UI:
-      *format = GL_RGBA_INTEGER;
-      *type = GL_UNSIGNED_BYTE;
-   break;
-   case PIX_4_16I:
-      *format = GL_RGBA_INTEGER;
-      *type = GL_SHORT;
-   break;
-   case PIX_4_16UI:
-      *format = GL_RGBA_INTEGER;
-      *type = GL_UNSIGNED_SHORT;
-   break;
-   case PIX_4_32I:
-      *format = GL_RGBA_INTEGER;
-      *type = GL_INT;
-   break;
-   case PIX_4_32UI:
-      *format = GL_RGBA_INTEGER;
-      *type = GL_UNSIGNED_INT;
-   break;
-   case PIX_4_16F:
-      *format = GL_RGBA;
-      *type = GL_HALF_FLOAT;
-   break;
-   case PIX_4_32F:
-      *format = GL_RGBA;
-      *type = GL_FLOAT;
-   break;
-   default:
-      GPUT_ASSERT(false, "Unsupported pixel format");
-   }
-}
-
 GlTexId gla_createTexture(
-   PixelFormat pixFormat, int width, int height, void* texData
+   GlDataType pixDataType, int width, int height, void* texData
 ){
    GlTexId textureId;
    GLC(glGenTextures(1, &textureId));
    GLC(glBindTexture(GL_TEXTURE_2D, textureId));
 
-   GLenum extFormat, extType;
-   gla_getGlPixFormatAndType(pixFormat, &extFormat, &extType);
    GLC(glTexImage2D(
-      GL_TEXTURE_2D, 0, pixFormat, width, height, 0, extFormat, extType, texData
+      GL_TEXTURE_2D, 0,
+      dataTypesInfo[pixDataType].glInternalFormat,
+      width, height, 0,
+      dataTypesInfo[pixDataType].glFormat,
+      dataTypesInfo[pixDataType].glType,
+      texData
    ));
 
    GLC(glBindTexture(GL_TEXTURE_2D, 0));
