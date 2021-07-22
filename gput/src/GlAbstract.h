@@ -42,6 +42,44 @@ typedef enum {
    INDEX_BUFFER = GL_ELEMENT_ARRAY_BUFFER
 } BufferType;
 
+typedef enum {
+   PIX_1_8I    = GL_R8I,
+   PIX_1_8UI   = GL_R8UI,
+   PIX_1_16I   = GL_R16I,
+   PIX_1_16UI  = GL_R16UI,
+   PIX_1_32I   = GL_R32I,
+   PIX_1_32UI  = GL_R32UI,
+   PIX_1_16F   = GL_R16F,
+   PIX_1_32F   = GL_R32F,
+
+   PIX_2_8I    = GL_RG8I,
+   PIX_2_8UI   = GL_RG8UI,
+   PIX_2_16I   = GL_RG16I,
+   PIX_2_16UI  = GL_RG16UI,
+   PIX_2_32I   = GL_RG32I,
+   PIX_2_32UI  = GL_RG32UI,
+   PIX_2_16F   = GL_RG16F,
+   PIX_2_32F   = GL_RG32F,
+
+   PIX_3_8I    = GL_RGB8I,
+   PIX_3_8UI   = GL_RGB8UI,
+   PIX_3_16I   = GL_RGB16I,
+   PIX_3_16UI  = GL_RGB16UI,
+   PIX_3_32I   = GL_RGB32I,
+   PIX_3_32UI  = GL_RGB32UI,
+   PIX_3_16F   = GL_RGB16F,
+   PIX_3_32F   = GL_RGB32F,
+
+   PIX_4_8I    = GL_RGBA8I,
+   PIX_4_8UI   = GL_RGBA8UI,
+   PIX_4_16I   = GL_RGBA16I,
+   PIX_4_16UI  = GL_RGBA16UI,
+   PIX_4_32I   = GL_RGBA32I,
+   PIX_4_32UI  = GL_RGBA32UI,
+   PIX_4_16F   = GL_RGBA16F,
+   PIX_4_32F   = GL_RGBA32F,
+} PixelFormat;
+
 GlShaderId gla_createShader(
    ShaderType shaderType, const char* sources[], int srcsCount
 );
@@ -49,6 +87,10 @@ GlShaderId gla_createShader(
 void gla_deleteShader(GlShaderId shaderId);
 
 GlProgId gla_linkProgram(GlShaderId vertexShader, GlShaderId fragmentShader);
+
+void gla_bindProgram(GlProgId progId);
+
+void gla_unbindProgram();
 
 void gla_deleteProgram(GlProgId progId);
 
@@ -58,4 +100,16 @@ GlBuffId gla_createBuffer(
 
 void gla_bindBuffer(BufferType bufferType, GlBuffId bufferId);
 
+void gla_unbindBuffer(BufferType bufferType);
+
 void gla_deleteBuffer(GlBuffId bufferId);
+
+GlTexId gla_createTexture(
+   PixelFormat pixFormat, int width, int height, void* texData
+);
+
+void gla_bindTexture(GlTexId textureId);
+
+void gla_unbindTexture();
+
+void gla_deleteTexture(GlTexId textureId);

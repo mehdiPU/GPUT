@@ -86,6 +86,16 @@ GlProgId gla_linkProgram(GlShaderId vertexShader, GlShaderId fragmentShader)
    return progId;
 }
 
+void gla_bindProgram(GlProgId progId)
+{
+   GLC(glUseProgram(progId));
+}
+
+void gla_unbindProgram()
+{
+   GLC(glUseProgram(0));
+}
+
 void gla_deleteProgram(GlProgId progId)
 {
    GPUT_DEBUG_SCOPE(
@@ -112,8 +122,186 @@ void gla_bindBuffer(BufferType bufferType, GlBuffId bufferId)
    GLC(glBindBuffer(bufferType, bufferId));
 }
 
+void gla_unbindBuffer(BufferType bufferType)
+{
+   GLC(glBindBuffer(bufferType, 0));
+}
+
 void gla_deleteBuffer(GlBuffId bufferId)
 {
    GlBuffId localBufferId = bufferId;
    GLC(glDeleteBuffers(1, &localBufferId));
+}
+
+static void gla_getGlPixFormatAndType(
+   PixelFormat pixFormat, GLenum* format, GLenum* type
+){
+   switch (pixFormat) {
+   case PIX_1_8I:
+      *format = GL_RED_INTEGER;
+      *type = GL_BYTE;
+   break;
+   case PIX_1_8UI:
+      *format = GL_RED_INTEGER;
+      *type = GL_UNSIGNED_BYTE;
+   break;
+   case PIX_1_16I:
+      *format = GL_RED_INTEGER;
+      *type = GL_SHORT;
+   break;
+   case PIX_1_16UI:
+      *format = GL_RED_INTEGER;
+      *type = GL_UNSIGNED_SHORT;
+   break;
+   case PIX_1_32I:
+      *format = GL_RED_INTEGER;
+      *type = GL_INT;
+   break;
+   case PIX_1_32UI:
+      *format = GL_RED_INTEGER;
+      *type = GL_UNSIGNED_INT;
+   break;
+   case PIX_1_16F:
+      *format = GL_RED;
+      *type = GL_HALF_FLOAT;
+   break;
+   case PIX_1_32F:
+      *format = GL_RED;
+      *type = GL_FLOAT;
+   break;
+
+   case PIX_2_8I:
+      *format = GL_RG_INTEGER;
+      *type = GL_BYTE;
+   break;
+   case PIX_2_8UI:
+      *format = GL_RG_INTEGER;
+      *type = GL_UNSIGNED_BYTE;
+   break;
+   case PIX_2_16I:
+      *format = GL_RG_INTEGER;
+      *type = GL_SHORT;
+   break;
+   case PIX_2_16UI:
+      *format = GL_RG_INTEGER;
+      *type = GL_UNSIGNED_SHORT;
+   break;
+   case PIX_2_32I:
+      *format = GL_RG_INTEGER;
+      *type = GL_INT;
+   break;
+   case PIX_2_32UI:
+      *format = GL_RG_INTEGER;
+      *type = GL_UNSIGNED_INT;
+   break;
+   case PIX_2_16F:
+      *format = GL_RG;
+      *type = GL_HALF_FLOAT;
+   break;
+   case PIX_2_32F:
+      *format = GL_RG;
+      *type = GL_FLOAT;
+   break;
+
+   case PIX_3_8I:
+      *format = GL_RGB_INTEGER;
+      *type = GL_BYTE;
+   break;
+   case PIX_3_8UI:
+      *format = GL_RGB_INTEGER;
+      *type = GL_UNSIGNED_BYTE;
+   break;
+   case PIX_3_16I:
+      *format = GL_RGB_INTEGER;
+      *type = GL_SHORT;
+   break;
+   case PIX_3_16UI:
+      *format = GL_RGB_INTEGER;
+      *type = GL_UNSIGNED_SHORT;
+   break;
+   case PIX_3_32I:
+      *format = GL_RGB_INTEGER;
+      *type = GL_INT;
+   break;
+   case PIX_3_32UI:
+      *format = GL_RGB_INTEGER;
+      *type = GL_UNSIGNED_INT;
+   break;
+   case PIX_3_16F:
+      *format = GL_RGB;
+      *type = GL_HALF_FLOAT;
+   break;
+   case PIX_3_32F:
+      *format = GL_RGB;
+      *type = GL_FLOAT;
+   break;
+
+   case PIX_4_8I:
+      *format = GL_RGBA_INTEGER;
+      *type = GL_BYTE;
+   break;
+   case PIX_4_8UI:
+      *format = GL_RGBA_INTEGER;
+      *type = GL_UNSIGNED_BYTE;
+   break;
+   case PIX_4_16I:
+      *format = GL_RGBA_INTEGER;
+      *type = GL_SHORT;
+   break;
+   case PIX_4_16UI:
+      *format = GL_RGBA_INTEGER;
+      *type = GL_UNSIGNED_SHORT;
+   break;
+   case PIX_4_32I:
+      *format = GL_RGBA_INTEGER;
+      *type = GL_INT;
+   break;
+   case PIX_4_32UI:
+      *format = GL_RGBA_INTEGER;
+      *type = GL_UNSIGNED_INT;
+   break;
+   case PIX_4_16F:
+      *format = GL_RGBA;
+      *type = GL_HALF_FLOAT;
+   break;
+   case PIX_4_32F:
+      *format = GL_RGBA;
+      *type = GL_FLOAT;
+   break;
+   default:
+      GPUT_ASSERT(false, "Unsupported pixel format");
+   }
+}
+
+GlTexId gla_createTexture(
+   PixelFormat pixFormat, int width, int height, void* texData
+){
+   GlTexId textureId;
+   GLC(glGenTextures(1, &textureId));
+   GLC(glBindTexture(GL_TEXTURE_2D, textureId));
+
+   GLenum extFormat, extType;
+   gla_getGlPixFormatAndType(pixFormat, &extFormat, &extType);
+   GLC(glTexImage2D(
+      GL_TEXTURE_2D, 0, pixFormat, width, height, 0, extFormat, extType, texData
+   ));
+
+   GLC(glBindTexture(GL_TEXTURE_2D, 0));
+   return textureId;
+}
+
+void gla_bindTexture(GlTexId textureId)
+{
+   GLC(glBindTexture(GL_TEXTURE_2D, textureId));
+}
+
+void gla_unbindTexture()
+{
+   GLC(glBindTexture(GL_TEXTURE_2D, 0));
+}
+
+void gla_deleteTexture(GlTexId textureId)
+{
+   GlTexId localTextureId = textureId;
+   GLC(glDeleteTextures(1, &localTextureId));
 }

@@ -118,7 +118,7 @@ bool gput_init()
    return true;
 }
 
-float data[8][8][4];
+char data[5][5][4];
 
 void gput_test()
 {
@@ -130,10 +130,8 @@ void gput_test()
 
    const char* VSSrc = "#version 310 es\n"
       "layout (location = 0) in vec3 aPos;\n"
-      "out lowp vec4 color;"
       "void main()"
       "{"
-      "  color = vec4(1.1, 1.1, 1.1, 1.1);"
       "  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);"
       "}\n";
 
@@ -141,11 +139,10 @@ void gput_test()
 
    const char* FSSrc = "#version 310 es\n"
    ""
-   "in lowp vec4 color;"
    "out lowp vec4 FragColor;\n"
    "void main()\n"
    "{\n"
-   "  FragColor = color;\n"
+   "  FragColor = intBitsToFloat(ivec4(1, 2, 3, 4));\n"
    "}\n";
 
    GlShaderId FSid = gla_createShader(FRAGMENT_SHADER, &FSSrc, 1);
@@ -156,24 +153,10 @@ void gput_test()
    GLC(glGenFramebuffers(1, &fbo));
    GLC(glBindFramebuffer(GL_FRAMEBUFFER, fbo));
 
-   GLuint texture;
-   GLC(glGenTextures(1, &texture));
-   GLC(glBindTexture(GL_TEXTURE_2D, texture));
-   GLC(glTexImage2D(
-      GL_TEXTURE_2D, 0, GL_RGBA32F, 8, 8, 0, GL_RGBA, GL_FLOAT, NULL
-   ));
+   GlTexId texture = gla_createTexture(PIX_4_8I, 5, 5, data);
 
    GLC(glFramebufferTexture2D(
       GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0
-   ));
-
-   GLuint rbo;
-   GLC(glGenRenderbuffers(1, &rbo));
-   GLC(glBindRenderbuffer(GL_RENDERBUFFER, rbo));
-   GLC(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 8, 8));
-
-   GLC(glFramebufferRenderbuffer(
-      GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo
    ));
 
    GLC(GPUT_ASSERT(
@@ -210,33 +193,39 @@ void gput_test()
       0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0
    ));
 
-   GLC(glViewport(0, 0, 8, 8));
+   GLC(glViewport(0, 0, 5, 5));
 
-   GLC(glClearColor(0.0f, 0.0f, 0.0f, 0.0f))
-   GLC(glClear(GL_COLOR_BUFFER_BIT));
-
-   GLC(glUseProgram(ShProgId));
+   gla_bindProgram(ShProgId);
    GLC(glBindVertexArray(vao));
-//
+
    GLC(glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0));
 
-   GLC(glReadPixels(0, 0, 8, 8, GL_RGBA, GL_FLOAT, data));
+   GLenum readFormat, readType;
+   GLC(glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_FORMAT, &readFormat));
+   GLC(glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_TYPE, &readType));
+
+   GLC(glReadPixels(0, 0, 5, 5, readFormat, readType, data));
 
    putchar('\n');
-   for (int i = 0; i < 8; i++) {
-      for (int j = 0; j < 8; j++) {
-         printf("[%1.0f %1.0f %1.0f %1.0f]",
+   for (int i = 0; i < 5; i++) {
+      for (int j = 0; j < 5; j++) {
+         printf("[%1d%1d%1d%1d]",
             data[i][j][0], data[i][j][1], data[i][j][2], data[i][j][3]
          );
       }
       putchar('\n');
    }
+   putchar('\n');
+
+   GPUT_LOG_INFO("%-10s%-10s", "macros", "returned");
+   GPUT_LOG_INFO("%-10p%-10p", GL_RGBA_INTEGER, readFormat);
+   GPUT_LOG_INFO("%-10p%-10p", GL_BYTE, readType);
 
    gla_deleteShader(VSid);
    gla_deleteShader(FSid);
    gla_deleteProgram(ShProgId);
    GLC(glDeleteFramebuffers(1, &fbo));
-   GLC(glDeleteTextures(1, &texture))
+   gla_deleteTexture(texture);
 }
 
 bool gput_terminate()
