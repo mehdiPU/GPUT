@@ -118,7 +118,10 @@ bool gput_init()
    return true;
 }
 
-int data[5][5][4];
+#define TEX_WIDTH    7
+#define TEX_HEIGHT   7
+
+vec4_f32 data[TEX_WIDTH][TEX_HEIGHT];
 
 void gput_test()
 {
@@ -129,38 +132,76 @@ void gput_test()
    GPUT_LOG_INFO("GLSL version: %s", glslVersion);
 
    const char* VSSrc = "#version 310 es\n"
-      "layout (location = 0) in vec3 aPos;\n"
-      "void main()"
-      "{"
-      "  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);"
+      "layout (location = 0) in vec2 aPos;\n"
+      "layout (location = 1) in int aShort;\n"
+      "layout (location = 2) in vec3 aColor;\n"
+      "layout (location = 3) in int aByte;\n"
+      "out vec3 vColor;\n"
+      "out flat int shortI;\n"
+      "out flat int byteI;\n"
+      "void main()\n"
+      "{\n"
+      "  vColor = aColor;\n"
+      "  shortI = aShort;\n"
+      "  byteI = aByte;\n"
+      "  gl_Position = vec4(aPos.x, aPos.y, 0.0f, 1.0f);\n"
       "}\n";
 
    GlShaderId VSid = gla_createShader(VERTEX_SHADER, &VSSrc, 1);
 
    const char* FSSrc = "#version 310 es\n"
-   ""
-   "out lowp vec4 FragColor;\n"
+   "in highp vec3 vColor;"
+   "in flat int shortI;"
+   "in flat int byteI;"
+   "out highp vec4 FragColor;\n"
    "void main()\n"
    "{\n"
-   "  FragColor = intBitsToFloat(ivec4(1, 2, 3, 4));\n"
+   "  FragColor = vec4(vColor.x, float(shortI), float(byteI), 0.0f);\n"
    "}\n";
 
    GlShaderId FSid = gla_createShader(FRAGMENT_SHADER, &FSSrc, 1);
 
    GlProgId ShProgId = gla_linkProgram(VSid, FSid);
 
-   GlTexId textureId = gla_createTexture(VEC4_I32, 5, 5, data);
+   GlTexId textureId = gla_createTexture(VEC4_F32, TEX_WIDTH, TEX_HEIGHT, data);
 
    GlFramebufferId framebufferId = gla_createFramebuffer(textureId);
 
-   float vertices[] = {
-       1.0f,  1.0f, 0.0f,
-      -1.0f,  1.0f, 0.0f,
-       0.0f, -1.0f, 0.0f
+   typedef struct {
+      vec2_f32 position;
+      i16 shortI;
+      vec3_f32 color;
+      i8 character;
+   } vertex;
+
+   GPUT_LOG_INFO(
+      "vert.pos=%d, vert.shortI=%d, vert.color=%d, vert.character=%d",
+      offsetof(vertex, position), offsetof(vertex, shortI),
+      offsetof(vertex, color), offsetof(vertex, character)
+   );
+   GPUT_LOG_INFO("sizeof(bool)=%d", sizeof(bool));
+
+   vertex vertices[] = {
+      {
+         {1.0f, 1.0f},
+         5,
+         {9.0f, 0.0f, 0.0f},
+         3
+      },{
+         {-1.0f, 1.0f},
+         8,
+         {0.0f, 9.0f, 0.0f},
+         1
+      },{
+         {0.0f, -1.0f},
+         9,
+         {0.0f, 0.0f, 9.0f},
+         6
+      }
    };
 
-   int indices[] = {
-      0, 1, 2
+   vec3_ui32 indices[] = {
+      {0, 1, 2}
    };
 
    GlBuffId vertexBuffer = gla_createBuffer(
@@ -177,12 +218,10 @@ void gput_test()
    gla_bindBuffer(VERTEX_BUFFER, vertexBuffer);
    gla_bindBuffer(INDEX_BUFFER, indexBuffer);
 
-   GLC(glEnableVertexAttribArray(0));
-   GLC(glVertexAttribPointer(
-      0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0
-   ));
+   GlDataType vertexLayout[] = {VEC2_F32, I32, VEC3_F32, I32};
+   gla_setVertexLayout(vertexLayout, 4);
 
-   GLC(glViewport(0, 0, 5, 5));
+   GLC(glViewport(0, 0, TEX_WIDTH, TEX_HEIGHT));
 
    gla_bindFramebuffer(framebufferId);
    gla_bindProgram(ShProgId);
@@ -194,13 +233,13 @@ void gput_test()
    GLC(glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_FORMAT, &readFormat));
    GLC(glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_TYPE, &readType));
 
-   GLC(glReadPixels(0, 0, 5, 5, readFormat, readType, data));
+   GLC(glReadPixels(0, 0, TEX_WIDTH, TEX_HEIGHT, readFormat, readType, data));
 
    putchar('\n');
-   for (int i = 0; i < 5; i++) {
-      for (int j = 0; j < 5; j++) {
-         printf("[%1d%1d%1d%1d]",
-            data[i][j][0], data[i][j][1], data[i][j][2], data[i][j][3]
+   for (int i = 0; i < TEX_WIDTH; i++) {
+      for (int j = 0; j < TEX_HEIGHT; j++) {
+         printf("[%.1f|%.1f|%.1f]",
+            data[i][j].x, data[i][j].y, data[i][j].z
          );
       }
       putchar('\n');
@@ -208,8 +247,8 @@ void gput_test()
    putchar('\n');
 
    GPUT_LOG_INFO("%-10s%-10s", "macros", "returned");
-   GPUT_LOG_INFO("%-10p%-10p", GL_RGBA_INTEGER, readFormat);
-   GPUT_LOG_INFO("%-10p%-10p", GL_INT, readType);
+   GPUT_LOG_INFO("%-10p%-10p", GL_RGBA, readFormat);
+   GPUT_LOG_INFO("%-10p%-10p", GL_FLOAT, readType);
 
    gla_deleteShader(VSid);
    gla_deleteShader(FSid);

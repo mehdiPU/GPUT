@@ -22,84 +22,192 @@
  * SOFTWARE.
  */
 
+#include <stdalign.h>
+
 #include "GlAbstract.h"
 #include "gputDebug.h"
 
 typedef struct {
-   int size;
    GLenum glType;
    GLenum glFormat;
    GLenum glInternalFormat;
+   unsigned char size;
+   unsigned char elementsCount;
+   unsigned char alignment;
+   bool isInteger;
 } DataTypeInfo;
+
+typedef struct {
+   GLvoid* attribPtr;
+   GLenum type;
+   char elementsCount;
+   bool isInteger;
+} AttribInfo;
 
 static const DataTypeInfo dataTypesInfo[] = {
    // I8
-   {sizeof(GLbyte),        GL_BYTE,             GL_RED_INTEGER,   GL_R8I},
+   {
+      GL_BYTE,                GL_RED_INTEGER,      GL_R8I,
+      sizeof(GLbyte),         1,                   alignof(GLbyte),     true
+   },
    // I16
-   {sizeof(GLshort),       GL_SHORT,            GL_RED_INTEGER,   GL_R16I},
+   {
+      GL_SHORT,               GL_RED_INTEGER,      GL_R16I,
+      sizeof(GLshort),        1,                   alignof(GLshort),    true
+   },
    // I32
-   {sizeof(GLint),         GL_INT,              GL_RED_INTEGER,   GL_R32I},
+   {
+      GL_INT,                 GL_RED_INTEGER,      GL_R32I,
+      sizeof(GLint),          1,                   alignof(GLint),      true
+   },
    // F16
-   {sizeof(GLhalf),        GL_HALF_FLOAT,       GL_RED,           GL_R16F},
+   {
+      GL_HALF_FLOAT,          GL_RED,              GL_R16F,
+      sizeof(GLhalf),         1,                   alignof(GLhalf),     false
+   },
    // F32
-   {sizeof(GLfloat),       GL_FLOAT,            GL_RED,           GL_R32F},
+   {
+      GL_FLOAT,               GL_RED,              GL_R32F,
+      sizeof(GLfloat),        1,                   alignof(GLfloat),    false
+   },
    // UI8
-   {sizeof(GLubyte),       GL_UNSIGNED_BYTE,    GL_RED_INTEGER,   GL_R8UI},
+   {
+      GL_UNSIGNED_BYTE,       GL_RED_INTEGER,      GL_R8UI,
+      sizeof(GLubyte),        1,                   alignof(GLubyte),    true
+   },
    //UI16
-   {sizeof(GLushort),      GL_UNSIGNED_SHORT,   GL_RED_INTEGER,   GL_R16UI},
+   {
+      GL_UNSIGNED_SHORT,      GL_RED_INTEGER,      GL_R16UI,
+      sizeof(GLushort),       1,                   alignof(GLushort),   true
+   },
    //UI32
-   {sizeof(GLuint),        GL_UNSIGNED_INT,     GL_RED_INTEGER,   GL_R32UI},
+   {
+      GL_UNSIGNED_INT,        GL_RED_INTEGER,      GL_R32UI,
+      sizeof(GLuint),         1,                   alignof(GLuint),     true
+   },
 
    // VEC2_I8
-   {2 * sizeof(GLbyte),    GL_BYTE,             GL_RG_INTEGER,    GL_RG8I},
+   {
+      GL_BYTE,                GL_RG_INTEGER,       GL_RG8I,
+      2 * sizeof(GLbyte),     2,                   alignof(GLbyte),     true
+   },
    // VEC2_I16
-   {2 * sizeof(GLshort),   GL_SHORT,            GL_RG_INTEGER,    GL_RG16I},
+   {
+      GL_SHORT,               GL_RG_INTEGER,       GL_RG16I,
+      2 * sizeof(GLshort),    2,                   alignof(GLshort),    true
+   },
    // VEC2_I32
-   {2 * sizeof(GLint),     GL_INT,              GL_RG_INTEGER,    GL_RG32I},
+   {
+      GL_INT,                 GL_RG_INTEGER,       GL_RG32I,
+      2 * sizeof(GLint),      2,                   alignof(GLint),      true
+   },
    // VEC2_F16
-   {2 * sizeof(GLhalf),    GL_HALF_FLOAT,       GL_RG,            GL_RG16F},
+   {
+      GL_HALF_FLOAT,          GL_RG,               GL_RG16F,
+      2 * sizeof(GLhalf),     2,                   alignof(GLhalf),     false
+   },
    // VEC2_F32
-   {2 * sizeof(GLfloat),   GL_FLOAT,            GL_RG,            GL_RG32F},
+   {
+      GL_FLOAT,               GL_RG,               GL_RG32F,
+      2 * sizeof(GLfloat),    2,                   alignof(GLfloat),    false
+   },
    // VEC2_UI8
-   {2 * sizeof(GLubyte),   GL_UNSIGNED_BYTE,    GL_RG_INTEGER,    GL_RG8UI},
+   {
+      GL_UNSIGNED_BYTE,       GL_RG_INTEGER,       GL_RG8UI,
+      2 * sizeof(GLubyte),    2,                   alignof(GLubyte),    true
+   },
    // VEC2_UI16
-   {2 * sizeof(GLushort),  GL_UNSIGNED_SHORT,   GL_RG_INTEGER,    GL_RG16UI},
+   {
+      GL_UNSIGNED_SHORT,      GL_RG_INTEGER,       GL_RG16UI,
+      2 * sizeof(GLushort),   2,                   alignof(GLushort),   true
+   },
    // VEC2_UI32
-   {2 * sizeof(GLuint),    GL_UNSIGNED_INT,     GL_RG_INTEGER,    GL_RG32UI},
+   {
+      GL_UNSIGNED_INT,        GL_RG_INTEGER,       GL_RG32UI,
+      2 * sizeof(GLuint),     2,                   alignof(GLuint),     true
+   },
 
    // VEC3_I8
-   {3 * sizeof(GLbyte),    GL_BYTE,             GL_RGB_INTEGER,   GL_RGB8I},
+   {
+      GL_BYTE,                GL_RGB_INTEGER,      GL_RGB8I,
+      3 * sizeof(GLbyte),     3,                   alignof(GLbyte),     true
+   },
    // VEC3_I16
-   {3 * sizeof(GLshort),   GL_SHORT,            GL_RGB_INTEGER,   GL_RGB16I},
+   {
+      GL_SHORT,               GL_RGB_INTEGER,      GL_RGB16I,
+      3 * sizeof(GLshort),    3,                   alignof(GLshort),    true
+   },
    // VEC3_I32
-   {3 * sizeof(GLint),     GL_INT,              GL_RGB_INTEGER,   GL_RGB32I},
+   {
+      GL_INT,                 GL_RGB_INTEGER,      GL_RGB32I,
+      3 * sizeof(GLint),      3,                   alignof(GLint),      true
+   },
    // VEC3_F16
-   {3 * sizeof(GLhalf),    GL_HALF_FLOAT,       GL_RGB,           GL_RGB16F},
+   {
+      GL_HALF_FLOAT,          GL_RGB,              GL_RGB16F,
+      3 * sizeof(GLhalf),     3,                   alignof(GLhalf),     false
+   },
    // VEC3_F32
-   {3 * sizeof(GLfloat),   GL_FLOAT,            GL_RGB,           GL_RGB32F},
+   {
+      GL_FLOAT,               GL_RGB,              GL_RGB32F,
+      3 * sizeof(GLfloat),    3,                   alignof(GLfloat),    false
+   },
    // VEC3_UI8
-   {3 * sizeof(GLubyte),   GL_UNSIGNED_BYTE,    GL_RGB_INTEGER,   GL_RGB8UI},
+   {
+      GL_UNSIGNED_BYTE,       GL_RGB_INTEGER,      GL_RGB8UI,
+      3 * sizeof(GLubyte),    3,                   alignof(GLubyte),    true
+   },
    // VEC3_UI16
-   {3 * sizeof(GLushort),  GL_UNSIGNED_SHORT,   GL_RGB_INTEGER,   GL_RGB16UI},
+   {
+      GL_UNSIGNED_SHORT,      GL_RGB_INTEGER,      GL_RGB16UI,
+      3 * sizeof(GLushort),   3,                   alignof(GLushort),   true
+   },
    // VEC3_UI32
-   {3 * sizeof(GLuint),    GL_UNSIGNED_INT,     GL_RGB_INTEGER,   GL_RGB32UI},
+   {
+      GL_UNSIGNED_INT,        GL_RGB_INTEGER,      GL_RGB32UI,
+      3 * sizeof(GLuint),     3,                   alignof(GLuint),     true
+   },
 
    // VEC4_I8
-   {4 * sizeof(GLbyte),    GL_BYTE,             GL_RGBA_INTEGER,  GL_RGBA8I},
+   {
+      GL_BYTE,                GL_RGBA_INTEGER,     GL_RGBA8I,
+      4 * sizeof(GLbyte),     4,                   alignof(GLbyte),     true
+   },
    // VEC4_I16
-   {4 * sizeof(GLshort),   GL_SHORT,            GL_RGBA_INTEGER,  GL_RGBA16I},
+   {
+      GL_SHORT,               GL_RGBA_INTEGER,     GL_RGBA16I,
+      4 * sizeof(GLshort),    4,                   alignof(GLshort),    true
+   },
    // VEC4_I32
-   {4 * sizeof(GLint),     GL_INT,              GL_RGBA_INTEGER,  GL_RGBA32I},
+   {
+      GL_INT,                 GL_RGBA_INTEGER,     GL_RGBA32I,
+      4 * sizeof(GLint),      4,                   alignof(GLint),      true
+   },
    // VEC4_F16
-   {4 * sizeof(GLhalf),    GL_HALF_FLOAT,       GL_RGBA,          GL_RGBA16F},
+   {
+      GL_HALF_FLOAT,          GL_RGBA,             GL_RGBA16F,
+      4 * sizeof(GLhalf),     4,                   alignof(GLhalf),     false
+   },
    // VEC4_F32
-   {4 * sizeof(GLfloat),   GL_FLOAT,            GL_RGBA,          GL_RGBA32F},
+   {
+      GL_FLOAT,               GL_RGBA,             GL_RGBA32F,
+      4 * sizeof(GLfloat),    4,                   alignof(GLfloat),    false
+   },
    // VEC4_UI8
-   {4 * sizeof(GLubyte),   GL_UNSIGNED_BYTE,    GL_RGBA_INTEGER,  GL_RGBA8UI},
+   {
+      GL_UNSIGNED_BYTE,       GL_RGBA_INTEGER,     GL_RGBA8UI,
+      4 * sizeof(GLubyte),    4,                   alignof(GLubyte),    true
+   },
    // VEC4_UI16
-   {4 * sizeof(GLushort),  GL_UNSIGNED_SHORT,   GL_RGBA_INTEGER,  GL_RGBA16UI},
+   {
+      GL_UNSIGNED_SHORT,      GL_RGBA_INTEGER,     GL_RGBA16UI,
+      4 * sizeof(GLushort),   4,                   alignof(GLushort),   true
+   },
    // VEC4_UI32
-   {4 * sizeof(GLuint),    GL_UNSIGNED_INT,     GL_RGBA_INTEGER,  GL_RGBA32UI},
+   {
+      GL_UNSIGNED_INT,        GL_RGBA_INTEGER,     GL_RGBA32UI,
+      4 * sizeof(GLuint),     4,                   alignof(GLuint),     true
+   },
 };
 
 #define INFOLOG_SIZE 512
@@ -117,8 +225,15 @@ GlShaderId gla_createShader(
       GLint success;
       GLC(glGetShaderiv(shaderId, GL_COMPILE_STATUS, &success));
       if (!success) {
+         const char* shaderTypeStr;
+         if (shaderType == VERTEX_SHADER) {
+            shaderTypeStr = "VERTEX SHADER";
+         }
+         else {
+            shaderTypeStr = "FRAGMENT SHADER";
+         }
          GLC(glGetShaderInfoLog(shaderId, INFOLOG_SIZE, NULL, infolog));
-         GPUT_ASSERT(success, "Shader compile error:\n%s", infolog);
+         GPUT_ASSERT(success, "%s compile error:\n%s", shaderTypeStr, infolog);
       }
    )
    return shaderId;
@@ -276,4 +391,59 @@ void gla_deleteFramebuffer(GlFramebufferId framebufferId)
 {
    GlFramebufferId localFramebufferId = framebufferId;
    GLC(glDeleteFramebuffers(1, &localFramebufferId));
+}
+
+void gla_setVertexLayout(GlDataType attribsDataTypes[], int attribsCount)
+{
+
+   AttribInfo attribsInfo[attribsCount];
+   GlDataType dType = attribsDataTypes[0];
+   char maxAlignment = dataTypesInfo[dType].alignment;
+   GLsizei stride = dataTypesInfo[dType].size;
+
+   attribsInfo[0].attribPtr = (void*)0;
+   attribsInfo[0].type = dataTypesInfo[dType].glType;
+   attribsInfo[0].elementsCount = dataTypesInfo[dType].elementsCount;
+   attribsInfo[0].isInteger = dataTypesInfo[dType].isInteger;
+
+   for (int i = 1; i < attribsCount; i++) {
+
+      dType = attribsDataTypes[i];
+      char alignment = dataTypesInfo[dType].alignment;
+      if (alignment > maxAlignment) {
+         maxAlignment = alignment;
+      }
+      char alignmentOffset = stride % alignment;
+
+      if (alignmentOffset != 0) {
+         stride += alignment - alignmentOffset;
+      }
+      attribsInfo[i].attribPtr = (void*)((long)stride);
+      attribsInfo[i].type = dataTypesInfo[dType].glType;
+      attribsInfo[i].elementsCount = dataTypesInfo[dType].elementsCount;
+      attribsInfo[i].isInteger = dataTypesInfo[dType].isInteger;
+
+      stride += dataTypesInfo[dType].size;
+   }
+
+   char globalAlignmentOffset = stride % maxAlignment;
+   if (globalAlignmentOffset != 0) {
+      stride += maxAlignment - globalAlignmentOffset;
+   }
+
+   for (int i = 0; i < attribsCount; i++) {
+      GLC(glEnableVertexAttribArray(i));
+      if (attribsInfo[i].isInteger) {
+         GLC(glVertexAttribIPointer(
+            i, attribsInfo[i].elementsCount, attribsInfo[i].type,
+            stride, attribsInfo[i].attribPtr
+         ));
+      }
+      else {
+         GLC(glVertexAttribPointer(
+            i, attribsInfo[i].elementsCount, attribsInfo[i].type,
+            GL_FALSE, stride, attribsInfo[i].attribPtr
+         ));
+      }
+   }
 }

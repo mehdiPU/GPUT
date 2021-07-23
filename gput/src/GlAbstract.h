@@ -43,6 +43,159 @@ typedef enum {
    INDEX_BUFFER = GL_ELEMENT_ARRAY_BUFFER
 } BufferType;
 
+typedef GLbyte    i8;
+typedef GLshort   i16;
+typedef GLint     i32;
+typedef GLhalf    f16;
+typedef GLfloat   f32;
+typedef GLubyte   ui8;
+typedef GLushort  ui16;
+typedef GLuint    ui32;
+
+typedef struct {
+   i8 x;
+   i8 y;
+} vec2_i8;
+
+typedef struct {
+   i16 x;
+   i16 y;
+} vec2_i16;
+
+typedef struct {
+   i32 x;
+   i32 y;
+} vec2_i32;
+
+typedef struct {
+   f16 x;
+   f16 y;
+} vec2_f16;
+
+typedef struct {
+   f32 x;
+   f32 y;
+} vec2_f32;
+
+typedef struct {
+   ui8 x;
+   ui8 y;
+} vec2_ui8;
+
+typedef struct {
+   ui16 x;
+   ui16 y;
+} vec2_ui16;
+
+typedef struct {
+   ui32 x;
+   ui32 y;
+} vec2_ui32;
+
+typedef struct {
+   i8 x;
+   i8 y;
+   i8 z;
+} vec3_i8;
+
+typedef struct {
+   i16 x;
+   i16 y;
+   i16 z;
+} vec3_i16;
+
+typedef struct {
+   i32 x;
+   i32 y;
+   i32 z;
+} vec3_i32;
+
+typedef struct {
+   f16 x;
+   f16 y;
+   f16 z;
+} vec3_f16;
+
+typedef struct {
+   f32 x;
+   f32 y;
+   f32 z;
+} vec3_f32;
+
+typedef struct {
+   ui8 x;
+   ui8 y;
+   ui8 z;
+} vec3_ui8;
+
+typedef struct {
+   ui16 x;
+   ui16 y;
+   ui16 z;
+} vec3_ui16;
+
+typedef struct {
+   ui32 x;
+   ui32 y;
+   ui32 z;
+} vec3_ui32;
+
+typedef struct {
+   i8 x;
+   i8 y;
+   i8 z;
+   i8 w;
+} vec4_i8;
+
+typedef struct {
+   i16 x;
+   i16 y;
+   i16 z;
+   i16 w;
+} vec4_i16;
+
+typedef struct {
+   i32 x;
+   i32 y;
+   i32 z;
+   i32 w;
+} vec4_i32;
+
+typedef struct {
+   f16 x;
+   f16 y;
+   f16 z;
+   f16 w;
+} vec4_f16;
+
+typedef struct {
+   f32 x;
+   f32 y;
+   f32 z;
+   f32 w;
+} vec4_f32;
+
+typedef struct {
+   ui8 x;
+   ui8 y;
+   ui8 z;
+   ui8 w;
+} vec4_ui8;
+
+typedef struct {
+   ui16 x;
+   ui16 y;
+   ui16 z;
+   ui16 w;
+} vec4_ui16;
+
+typedef struct {
+   ui32 x;
+   ui32 y;
+   ui32 z;
+   ui32 w;
+} vec4_ui32;
+
 typedef enum {
    I8,
    I16,
@@ -122,3 +275,5 @@ void gla_bindFramebuffer(GlFramebufferId framebufferId);
 void gla_unbindFramebuffer();
 
 void gla_deleteFramebuffer(GlFramebufferId framebufferId);
+
+void gla_setVertexLayout(GlDataType attribsDataTypes[], int attribsCount);
