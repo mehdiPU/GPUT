@@ -447,3 +447,14 @@ void gla_setVertexLayout(GlDataType attribsDataTypes[], int attribsCount)
       }
    }
 }
+
+void gla_readPixelData(int width, int height, void* dataBuffer)
+{
+  GLenum readFormat;
+  GLenum readType;
+
+  GLC(glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_FORMAT, &readFormat));
+  GLC(glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_TYPE, &readType));
+
+  GLC(glReadPixels(0, 0, width, height, readFormat, readType, dataBuffer));
+}

@@ -277,3 +277,5 @@ void gla_unbindFramebuffer();
 void gla_deleteFramebuffer(GlFramebufferId framebufferId);
 
 void gla_setVertexLayout(GlDataType attribsDataTypes[], int attribsCount);
+
+void gla_readPixelData(int width, int height, void* dataBuffer);

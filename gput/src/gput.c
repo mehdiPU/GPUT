@@ -229,11 +229,7 @@ void gput_test()
 
    GLC(glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0));
 
-   GLenum readFormat, readType;
-   GLC(glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_FORMAT, &readFormat));
-   GLC(glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_TYPE, &readType));
-
-   GLC(glReadPixels(0, 0, TEX_WIDTH, TEX_HEIGHT, readFormat, readType, data));
+   gla_readPixelData(TEX_WIDTH, TEX_HEIGHT, data);
 
    putchar('\n');
    for (int i = 0; i < TEX_WIDTH; i++) {
@@ -245,10 +241,6 @@ void gput_test()
       putchar('\n');
    }
    putchar('\n');
-
-   GPUT_LOG_INFO("%-10s%-10s", "macros", "returned");
-   GPUT_LOG_INFO("%-10p%-10p", GL_RGBA, readFormat);
-   GPUT_LOG_INFO("%-10p%-10p", GL_FLOAT, readType);
 
    gla_deleteShader(VSid);
    gla_deleteShader(FSid);
