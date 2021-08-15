@@ -131,37 +131,18 @@ void gput_test()
    const char* glslVersion = GLC(glGetString(GL_SHADING_LANGUAGE_VERSION));
    GPUT_LOG_INFO("GLSL version: %s", glslVersion);
 
-   const char* VSSrc = "#version 310 es\n"
-      "layout (location = 0) in vec2 aPos;\n"
-      "layout (location = 1) in int aShort;\n"
-      "layout (location = 2) in vec3 aColor;\n"
-      "layout (location = 3) in int aByte;\n"
-      "out vec3 vColor;\n"
-      "out flat int shortI;\n"
-      "out flat int byteI;\n"
+   const char* CSSrc = "#version 310 es\n"
+      "layout(std430, binding = 0) buffer destBuffer {\n"
+      "  int data[];\n"
+      "} outBuffer;\n"
+      "layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;"
       "void main()\n"
       "{\n"
-      "  vColor = aColor;\n"
-      "  shortI = aShort;\n"
-      "  byteI = aByte;\n"
-      "  gl_Position = vec4(aPos.x, aPos.y, 0.0f, 1.0f);\n"
+      "  uint index = gl_WorkGroupID.x;\n"
+      "  outBuffer.data[index] = outBuffer.data[index] + 1;\n"
       "}\n";
 
-   GlShaderId VSid = gla_createShader(VERTEX_SHADER, &VSSrc, 1);
-
-   const char* FSSrc = "#version 310 es\n"
-   "in highp vec3 vColor;"
-   "in flat int shortI;"
-   "in flat int byteI;"
-   "out highp vec4 FragColor;\n"
-   "void main()\n"
-   "{\n"
-   "  FragColor = vec4(vColor.x, float(shortI), float(byteI), 0.0f);\n"
-   "}\n";
-
-   GlShaderId FSid = gla_createShader(FRAGMENT_SHADER, &FSSrc, 1);
-
-   GlProgId ShProgId = gla_linkProgram(VSid, FSid);
+   GlProgId cmpProgId = gla_createComputeProg(&CSSrc, 1);
 
    GlTexId textureId = gla_createTexture(VEC4_F32, TEX_WIDTH, TEX_HEIGHT, data);
 
@@ -173,13 +154,6 @@ void gput_test()
       vec3_f32 color;
       i8 character;
    } vertex;
-
-   GPUT_LOG_INFO(
-      "vert.pos=%d, vert.shortI=%d, vert.color=%d, vert.character=%d",
-      offsetof(vertex, position), offsetof(vertex, shortI),
-      offsetof(vertex, color), offsetof(vertex, character)
-   );
-   GPUT_LOG_INFO("sizeof(bool)=%d", sizeof(bool));
 
    vertex vertices[] = {
       {
@@ -224,27 +198,9 @@ void gput_test()
    GLC(glViewport(0, 0, TEX_WIDTH, TEX_HEIGHT));
 
    gla_bindFramebuffer(framebufferId);
-   gla_bindProgram(ShProgId);
    //GLC(glBindVertexArray(vao));
 
-   GLC(glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0));
-
-   gla_readPixelData(TEX_WIDTH, TEX_HEIGHT, data);
-
-   putchar('\n');
-   for (int i = 0; i < TEX_WIDTH; i++) {
-      for (int j = 0; j < TEX_HEIGHT; j++) {
-         printf("[%.1f|%.1f|%.1f]",
-            data[i][j].x, data[i][j].y, data[i][j].z
-         );
-      }
-      putchar('\n');
-   }
-   putchar('\n');
-
-   gla_deleteShader(VSid);
-   gla_deleteShader(FSid);
-   gla_deleteProgram(ShProgId);
+   gla_deleteProgram(cmpProgId);
    gla_deleteFramebuffer(framebufferId);
    gla_deleteTexture(textureId);
 }

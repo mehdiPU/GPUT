@@ -35,7 +35,8 @@ typedef GLuint GlFramebufferId;
 
 typedef enum {
    VERTEX_SHADER = GL_VERTEX_SHADER,
-   FRAGMENT_SHADER = GL_FRAGMENT_SHADER
+   FRAGMENT_SHADER = GL_FRAGMENT_SHADER,
+   COMPUTE_SHADER = GL_COMPUTE_SHADER
 } ShaderType;
 
 typedef enum {
@@ -245,6 +246,8 @@ GlProgId gla_linkProgram(GlShaderId vertexShader, GlShaderId fragmentShader);
 void gla_bindProgram(GlProgId progId);
 
 void gla_unbindProgram();
+
+GlProgId gla_createComputeProg(const char* cmpShaderSrcs[], int srcsCount);
 
 void gla_deleteProgram(GlProgId progId);
 

@@ -226,11 +226,18 @@ GlShaderId gla_createShader(
       GLC(glGetShaderiv(shaderId, GL_COMPILE_STATUS, &success));
       if (!success) {
          const char* shaderTypeStr;
-         if (shaderType == VERTEX_SHADER) {
+         switch (shaderType) {
+         case VERTEX_SHADER:
             shaderTypeStr = "VERTEX SHADER";
-         }
-         else {
+            break;
+         case FRAGMENT_SHADER:
             shaderTypeStr = "FRAGMENT SHADER";
+            break;
+         case COMPUTE_SHADER:
+            shaderTypeStr = "COMPUTE SHADER";
+            break;
+         default:
+            GPUT_ASSERT(false, "Invalid shader type");
          }
          GLC(glGetShaderInfoLog(shaderId, INFOLOG_SIZE, NULL, infolog));
          GPUT_ASSERT(success, "%s compile error:\n%s", shaderTypeStr, infolog);
@@ -286,6 +293,27 @@ void gla_bindProgram(GlProgId progId)
 void gla_unbindProgram()
 {
    GLC(glUseProgram(0));
+}
+
+GlProgId gla_createComputeProg(const char* cmpShaderSrcs[], int srcsCount)
+{
+   GlShaderId cmpShaderId = gla_createShader(
+      COMPUTE_SHADER, cmpShaderSrcs, srcsCount
+   );
+
+   GlProgId progId = GLC(glCreateProgram());
+   GLC(glAttachShader(progId, cmpShaderId));
+   GLC(glLinkProgram(progId));
+
+   GPUT_DEBUG_SCOPE(
+      GLint success;
+      GLC(glGetProgramiv(progId, GL_LINK_STATUS, &success));
+      if (!success) {
+         GLC(glGetProgramInfoLog(progId, INFOLOG_SIZE, NULL, infolog));
+         GPUT_ASSERT(success, "Program link error:\n%s", infolog);
+      }
+   )
+   return progId;
 }
 
 void gla_deleteProgram(GlProgId progId)
