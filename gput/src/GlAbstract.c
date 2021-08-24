@@ -342,6 +342,11 @@ void gla_bindBuffer(BufferType bufferType, GlBuffId bufferId)
    GLC(glBindBuffer(bufferType, bufferId));
 }
 
+void gla_bindComputeStorageBuffer(GlBuffId bufferId, int index)
+{
+   GLC(glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, bufferId));
+}
+
 void gla_unbindBuffer(BufferType bufferType)
 {
    GLC(glBindBuffer(bufferType, 0));

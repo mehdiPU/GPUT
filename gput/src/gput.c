@@ -144,65 +144,33 @@ void gput_test()
 
    GlProgId cmpProgId = gla_createComputeProg(&CSSrc, 1);
 
-   GlTexId textureId = gla_createTexture(VEC4_F32, TEX_WIDTH, TEX_HEIGHT, data);
-
-   GlFramebufferId framebufferId = gla_createFramebuffer(textureId);
-
-   typedef struct {
-      vec2_f32 position;
-      i16 shortI;
-      vec3_f32 color;
-      i8 character;
-   } vertex;
-
-   vertex vertices[] = {
-      {
-         {1.0f, 1.0f},
-         5,
-         {9.0f, 0.0f, 0.0f},
-         3
-      },{
-         {-1.0f, 1.0f},
-         8,
-         {0.0f, 9.0f, 0.0f},
-         1
-      },{
-         {0.0f, -1.0f},
-         9,
-         {0.0f, 0.0f, 9.0f},
-         6
-      }
+   int cmpData[] = {
+      0, 1, 2, 3, 4, 5, 6, 7
    };
-
-   vec3_ui32 indices[] = {
-      {0, 1, 2}
-   };
-
-   GlBuffId vertexBuffer = gla_createBuffer(
-      VERTEX_BUFFER, vertices, sizeof(vertices)
-   );
-   GlBuffId indexBuffer = gla_createBuffer(
-      INDEX_BUFFER, indices, sizeof(indices)
+   GlBuffId cmpBuffer = gla_createBuffer(
+      COMPUTE_STORAGE_BUFFER, cmpData, sizeof(cmpData)
    );
 
-   //GLuint vao;
-   //GLC(glGenVertexArrays(1, &vao));
-   //GLC(glBindVertexArray(vao));
+   gla_bindComputeStorageBuffer(cmpBuffer, 0);
 
-   gla_bindBuffer(VERTEX_BUFFER, vertexBuffer);
-   gla_bindBuffer(INDEX_BUFFER, indexBuffer);
+   gla_bindProgram(cmpProgId);
 
-   GlDataType vertexLayout[] = {VEC2_F32, I32, VEC3_F32, I32};
-   gla_setVertexLayout(vertexLayout, 4);
+   GLC(glDispatchCompute(8, 1, 1));
 
-   GLC(glViewport(0, 0, TEX_WIDTH, TEX_HEIGHT));
+   int* readData = GLC(glMapBufferRange(
+      GL_SHADER_STORAGE_BUFFER, 0, sizeof(cmpData), GL_MAP_READ_BIT
+   ));
 
-   gla_bindFramebuffer(framebufferId);
-   //GLC(glBindVertexArray(vao));
+   puts("read data:");
+   for (int i = 0; i < 8; i++) {
+      printf("%d ", readData[i]);
+   }
+
+   bool unmapedSuccess = GLC(glUnmapBuffer(GL_SHADER_STORAGE_BUFFER));
+   GPUT_ASSERT(unmapedSuccess, "Could not unmap the buffer");
 
    gla_deleteProgram(cmpProgId);
-   gla_deleteFramebuffer(framebufferId);
-   gla_deleteTexture(textureId);
+   gla_deleteBuffer(cmpBuffer);
 }
 
 bool gput_terminate()

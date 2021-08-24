@@ -41,7 +41,8 @@ typedef enum {
 
 typedef enum {
    VERTEX_BUFFER = GL_ARRAY_BUFFER,
-   INDEX_BUFFER = GL_ELEMENT_ARRAY_BUFFER
+   INDEX_BUFFER = GL_ELEMENT_ARRAY_BUFFER,
+   COMPUTE_STORAGE_BUFFER = GL_SHADER_STORAGE_BUFFER
 } BufferType;
 
 typedef GLbyte    i8;
@@ -256,6 +257,8 @@ GlBuffId gla_createBuffer(
 );
 
 void gla_bindBuffer(BufferType bufferType, GlBuffId bufferId);
+
+void gla_bindComputeStorageBuffer(GlBuffId bufferId, int index);
 
 void gla_unbindBuffer(BufferType bufferType);
 
