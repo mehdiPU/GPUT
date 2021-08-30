@@ -150,12 +150,15 @@ void gput_test()
       "  int i = int(gl_WorkGroupID.x);\n"
       "  int j = int(gl_WorkGroupID.y);\n"
       "  int commonDim = int(mat0Dim.y);\n"
-      "  float element = 7.0f;\n"
-      "  for (int k = 0; k < commonDim; k++) {\n"
-      "     element += \n"
-      "        matrix0[i * mat0Dim.y + k] * matrix1[k * mat1Dim.y + j];\n"
+      //"  float element = 7.0f;\n"
+      //"  for (int k = 0; k < commonDim; k++) {\n"
+      //"     element = matrix0[i * mat0Dim.y + j] * matrix1[i * mat1Dim.y + j];\n"
+      //"  }\n"
+      "  float value = 0.0;"
+      "  for (int k = 0; k < 3; k++) {\n"
+      "    value = value + matrix1[3 + k] * matrix0[k] + float(j) + float(i);\n"
       "  }\n"
-      "  matrix2[i * mat2Dim.y + j] = element;\n"
+      "  matrix2[i * mat2Dim.y + j] = value;\n"
       "}\n";
 
    GlProgId cmpProgId = gla_createComputeProg(&CSSrc, 1);
@@ -171,9 +174,9 @@ void gput_test()
    GLC(glUniform2i(mat2Dim, 3, 3));
 
    float mat0[] = {
-      1.0f, 1.0f, 1.0f,
-      1.0f, 1.0f, 1.0f,
-      1.0f, 1.0f, 1.0f
+      2.0f, 2.0f, 2.0f,
+      2.0f, 2.0f, 2.0f,
+      2.0f, 2.0f, 2.0f
    };
 
    float mat1[] = {
