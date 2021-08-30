@@ -132,9 +132,9 @@ void gput_test()
    GPUT_LOG_INFO("GLSL version: %s", glslVersion);
 
    const char* CSSrc = "#version 310 es\n"
-      "uniform ivec2 mat0Dim;\n"
-      "uniform ivec2 mat1Dim;\n"
-      "uniform ivec2 mat2Dim;\n"
+      "layout(location = 0) uniform int uColsCount0;\n"
+      "layout(location = 1) uniform int uColsCount1;\n"
+      "layout(location = 2) uniform int uColsCount2;\n"
       "layout(std430, binding = 0) buffer Matrix0 {\n"
       "  float matrix0[];\n"
       "};\n"
@@ -149,40 +149,33 @@ void gput_test()
       "{\n"
       "  int i = int(gl_WorkGroupID.x);\n"
       "  int j = int(gl_WorkGroupID.y);\n"
-      "  int commonDim = int(mat0Dim.y);\n"
-      //"  float element = 7.0f;\n"
-      //"  for (int k = 0; k < commonDim; k++) {\n"
-      //"     element = matrix0[i * mat0Dim.y + j] * matrix1[i * mat1Dim.y + j];\n"
-      //"  }\n"
+      "  int commonDim = uColsCount0;\n"
       "  float value = 0.0;"
-      "  for (int k = 0; k < 3; k++) {\n"
-      "    value = value + matrix1[3 + k] * matrix0[k] + float(j) + float(i);\n"
+      "  for (int k = 0; k < commonDim; k++) {\n"
+      "    value += matrix0[(i * uColsCount0) + k] * matrix1[(k * uColsCount1) + j];\n"
       "  }\n"
-      "  matrix2[i * mat2Dim.y + j] = value;\n"
+      "  matrix2[(i * uColsCount2) + j] = value;\n"
       "}\n";
 
    GlProgId cmpProgId = gla_createComputeProg(&CSSrc, 1);
 
    gla_bindProgram(cmpProgId);
-
-   GlUniformId mat0Dim = gla_getUniformId(cmpProgId, "mat0Dim");
-   GlUniformId mat1Dim = gla_getUniformId(cmpProgId, "mat1Dim");
-   GlUniformId mat2Dim = gla_getUniformId(cmpProgId, "mat2Dim");
-
-   GLC(glUniform2i(mat0Dim, 3, 3));
-   GLC(glUniform2i(mat1Dim, 3, 3));
-   GLC(glUniform2i(mat2Dim, 3, 3));
+   GLC(glUniform1i(0, 3));
+   gla_bindProgram(cmpProgId);
+   GLC(glUniform1i(1, 3));
+   gla_bindProgram(cmpProgId);
+   GLC(glUniform1i(2, 3));
 
    float mat0[] = {
-      2.0f, 2.0f, 2.0f,
-      2.0f, 2.0f, 2.0f,
-      2.0f, 2.0f, 2.0f
+      0.0f, 1.0f, 0.0f,
+      0.0f, 0.0f, 1.0f,
+      1.0f, 0.0f, 0.0f
    };
 
    float mat1[] = {
-      1.0f, 2.0f, 3.0f,
-      4.0f, 5.0f, 6.0f,
-      7.0f, 8.0f, 9.0f
+      0.0f, 1.0f, 2.0f,
+      3.0f, 4.0f, 5.0f,
+      6.0f, 7.0f, 8.0f
    };
 
    GlBuffId mat0Id = gla_createBuffer(
@@ -200,8 +193,6 @@ void gput_test()
    gla_bindComputeStorageBuffer(mat0Id, 0);
    gla_bindComputeStorageBuffer(mat1Id, 1);
    gla_bindComputeStorageBuffer(mat2Id, 2);
-
-   gla_bindProgram(cmpProgId);
 
    GLC(glDispatchCompute(3, 3, 1));
 
