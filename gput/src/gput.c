@@ -132,45 +132,99 @@ void gput_test()
    GPUT_LOG_INFO("GLSL version: %s", glslVersion);
 
    const char* CSSrc = "#version 310 es\n"
-      "layout(std430, binding = 0) buffer destBuffer {\n"
-      "  int data[];\n"
-      "} outBuffer;\n"
+      "uniform ivec2 mat0Dim;\n"
+      "uniform ivec2 mat1Dim;\n"
+      "uniform ivec2 mat2Dim;\n"
+      "layout(std430, binding = 0) buffer Matrix0 {\n"
+      "  float matrix0[];\n"
+      "};\n"
+      "layout(std430, binding = 1) buffer Matrix1 {\n"
+      "  float matrix1[];\n"
+      "};\n"
+      "layout(std430, binding = 2) buffer Matrix2 {\n"
+      "  float matrix2[];\n"
+      "};\n"
       "layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;"
       "void main()\n"
       "{\n"
-      "  uint index = gl_WorkGroupID.x;\n"
-      "  outBuffer.data[index] = outBuffer.data[index] + 1;\n"
+      "  int i = int(gl_WorkGroupID.x);\n"
+      "  int j = int(gl_WorkGroupID.y);\n"
+      "  int commonDim = int(mat0Dim.y);\n"
+      "  float element = 7.0f;\n"
+      "  for (int k = 0; k < commonDim; k++) {\n"
+      "     element += \n"
+      "        matrix0[i * mat0Dim.y + k] * matrix1[k * mat1Dim.y + j];\n"
+      "  }\n"
+      "  matrix2[i * mat2Dim.y + j] = element;\n"
       "}\n";
 
    GlProgId cmpProgId = gla_createComputeProg(&CSSrc, 1);
 
-   int cmpData[] = {
-      0, 1, 2, 3, 4, 5, 6, 7
+   gla_bindProgram(cmpProgId);
+
+   GlUniformId mat0Dim = gla_getUniformId(cmpProgId, "mat0Dim");
+   GlUniformId mat1Dim = gla_getUniformId(cmpProgId, "mat1Dim");
+   GlUniformId mat2Dim = gla_getUniformId(cmpProgId, "mat2Dim");
+
+   GLC(glUniform2i(mat0Dim, 3, 3));
+   GLC(glUniform2i(mat1Dim, 3, 3));
+   GLC(glUniform2i(mat2Dim, 3, 3));
+
+   float mat0[] = {
+      1.0f, 1.0f, 1.0f,
+      1.0f, 1.0f, 1.0f,
+      1.0f, 1.0f, 1.0f
    };
-   GlBuffId cmpBuffer = gla_createBuffer(
-      COMPUTE_STORAGE_BUFFER, cmpData, sizeof(cmpData)
+
+   float mat1[] = {
+      1.0f, 2.0f, 3.0f,
+      4.0f, 5.0f, 6.0f,
+      7.0f, 8.0f, 9.0f
+   };
+
+   GlBuffId mat0Id = gla_createBuffer(
+      COMPUTE_STORAGE_BUFFER, mat0, 3 * 3 * sizeof(float)
    );
 
-   gla_bindComputeStorageBuffer(cmpBuffer, 0);
+   GlBuffId mat1Id = gla_createBuffer(
+      COMPUTE_STORAGE_BUFFER, mat1, 3 * 3 * sizeof(float)
+   );
+
+   GlBuffId mat2Id = gla_createBuffer(
+      COMPUTE_STORAGE_BUFFER, NULL, 3 * 3 * sizeof(float)
+   );
+
+   gla_bindComputeStorageBuffer(mat0Id, 0);
+   gla_bindComputeStorageBuffer(mat1Id, 1);
+   gla_bindComputeStorageBuffer(mat2Id, 2);
 
    gla_bindProgram(cmpProgId);
 
-   GLC(glDispatchCompute(8, 1, 1));
+   GLC(glDispatchCompute(3, 3, 1));
 
-   int* readData = GLC(glMapBufferRange(
-      GL_SHADER_STORAGE_BUFFER, 0, sizeof(cmpData), GL_MAP_READ_BIT
+   sleep(1);
+
+   gla_bindBuffer(COMPUTE_STORAGE_BUFFER, mat2Id);
+
+   float* readData = GLC(glMapBufferRange(
+      COMPUTE_STORAGE_BUFFER, 0, 3 * 3 * sizeof(float), GL_MAP_READ_BIT
    ));
 
    puts("read data:");
-   for (int i = 0; i < 8; i++) {
-      printf("%d ", readData[i]);
+   for (int i = 0; i < 3; i++) {
+      for (int j = 0; j < 3; j++) {
+         printf("%3.1f ", readData[i * 3 + j]);
+      }
+      putchar('\n');
    }
 
-   bool unmapedSuccess = GLC(glUnmapBuffer(GL_SHADER_STORAGE_BUFFER));
+   bool unmapedSuccess = GLC(glUnmapBuffer(COMPUTE_STORAGE_BUFFER));
    GPUT_ASSERT(unmapedSuccess, "Could not unmap the buffer");
 
    gla_deleteProgram(cmpProgId);
-   gla_deleteBuffer(cmpBuffer);
+   gla_deleteBuffer(mat0Id);
+   gla_deleteBuffer(mat1Id);
+   gla_deleteBuffer(mat2Id);
 }
 
 bool gput_terminate()

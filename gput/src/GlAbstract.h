@@ -32,6 +32,7 @@ typedef GLuint GlProgId;
 typedef GLuint GlBuffId;
 typedef GLuint GlTexId;
 typedef GLuint GlFramebufferId;
+typedef GLint  GlUniformId;
 
 typedef enum {
    VERTEX_SHADER = GL_VERTEX_SHADER,
@@ -285,3 +286,5 @@ void gla_deleteFramebuffer(GlFramebufferId framebufferId);
 void gla_setVertexLayout(GlDataType attribsDataTypes[], int attribsCount);
 
 void gla_readPixelData(int width, int height, void* dataBuffer);
+
+GlUniformId gla_getUniformId(GlProgId programId, const char* uniformName);

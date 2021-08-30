@@ -332,7 +332,7 @@ GlBuffId gla_createBuffer(
    GlBuffId BufferId;
    GLC(glGenBuffers(1, &BufferId));
    GLC(glBindBuffer(bufferType, BufferId));
-   GLC(glBufferData(bufferType, size, bufferData, GL_STATIC_DRAW));
+   GLC(glBufferData(bufferType, size, bufferData, GL_DYNAMIC_READ));
    GLC(glBindBuffer(bufferType, 0));
    return BufferId;
 }
@@ -490,4 +490,9 @@ void gla_readPixelData(int width, int height, void* dataBuffer)
   GLC(glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_TYPE, &readType));
 
   GLC(glReadPixels(0, 0, width, height, readFormat, readType, dataBuffer));
+}
+
+GlUniformId gla_getUniformId(GlProgId programId, const char* uniformName)
+{
+   GLC(glGetUniformLocation(programId, uniformName));
 }
