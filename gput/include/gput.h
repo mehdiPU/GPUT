@@ -29,4 +29,4 @@ bool gput_init();
 
 bool gput_terminate();
 
-void gput_test();
+void gput_test(bool useGPU);

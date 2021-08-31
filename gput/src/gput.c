@@ -118,23 +118,42 @@ bool gput_init()
    return true;
 }
 
-#define TEX_WIDTH    7
-#define TEX_HEIGHT   7
+#define M      200
+#define N      200
+#define K      200
 
-vec4_f32 data[TEX_WIDTH][TEX_HEIGHT];
+f32 mat0[M][K];
+f32 mat1[K][N];
+f32 mat2[M][N];
 
-void gput_test()
+#include <time.h>
+
+void matInit(f32 matrix[], int m, int n)
 {
-   const char* glVersion = GLC(glGetString(GL_VERSION));
-   GPUT_LOG_INFO("OpenGL version: %s", glVersion);
+   int elementsCount = m * n;
+   for (int i = 0; i < elementsCount; i++) {
+      matrix[i] = (rand() % 18) - 9;
+   }
+}
 
-   const char* glslVersion = GLC(glGetString(GL_SHADING_LANGUAGE_VERSION));
-   GPUT_LOG_INFO("GLSL version: %s", glslVersion);
+void printMatrix(f32 matrix[], int m, int n)
+{
+   for (int i = 0; i < m; i++) {
+      for (int j = 0; j < n; j++) {
+         printf("%+6.1f ", matrix[i * n + j]);
+      }
+      putchar('\n');
+   }
+}
 
+static void gput_GPUMatMul()
+{
    const char* CSSrc = "#version 310 es\n"
-      "layout(location = 0) uniform int uColsCount0;\n"
-      "layout(location = 1) uniform int uColsCount1;\n"
-      "layout(location = 2) uniform int uColsCount2;\n"
+      "layout(std140, binding = 0) uniform uniformData{\n"
+      "  int uColsCount0;\n"
+      "  int uColsCount1;\n"
+      "  int uColsCount2;\n"
+      "};\n"
       "layout(std430, binding = 0) buffer Matrix0 {\n"
       "  float matrix0[];\n"
       "};\n"
@@ -152,65 +171,50 @@ void gput_test()
       "  int commonDim = uColsCount0;\n"
       "  float value = 0.0;"
       "  for (int k = 0; k < commonDim; k++) {\n"
-      "    value += matrix0[(i * uColsCount0) + k] * matrix1[(k * uColsCount1) + j];\n"
+      "    value += matrix0[(i * uColsCount0) + k] * \n"
+      "             matrix1[(k * uColsCount1) + j];\n"
       "  }\n"
       "  matrix2[(i * uColsCount2) + j] = value;\n"
       "}\n";
 
    GlProgId cmpProgId = gla_createComputeProg(&CSSrc, 1);
+   gla_bindProgram(cmpProgId);
 
-   gla_bindProgram(cmpProgId);
-   GLC(glUniform1i(0, 3));
-   gla_bindProgram(cmpProgId);
-   GLC(glUniform1i(1, 3));
-   gla_bindProgram(cmpProgId);
-   GLC(glUniform1i(2, 3));
-
-   float mat0[] = {
-      0.0f, 1.0f, 0.0f,
-      0.0f, 0.0f, 1.0f,
-      1.0f, 0.0f, 0.0f
+   int matsDims[] = {
+      K, N, N
    };
 
-   float mat1[] = {
-      0.0f, 1.0f, 2.0f,
-      3.0f, 4.0f, 5.0f,
-      6.0f, 7.0f, 8.0f
-   };
+   GlBuffId matDimsBuffId = gla_createBuffer(
+      UNIFORM_BUFFER, matsDims, 3 * sizeof(int)
+   );
+
+   GLC(glBindBufferBase(GL_UNIFORM_BUFFER, 0, matDimsBuffId));
 
    GlBuffId mat0Id = gla_createBuffer(
-      COMPUTE_STORAGE_BUFFER, mat0, 3 * 3 * sizeof(float)
+      COMPUTE_STORAGE_BUFFER, mat0, M * K * sizeof(float)
    );
 
    GlBuffId mat1Id = gla_createBuffer(
-      COMPUTE_STORAGE_BUFFER, mat1, 3 * 3 * sizeof(float)
+      COMPUTE_STORAGE_BUFFER, mat1, K * N * sizeof(float)
    );
 
    GlBuffId mat2Id = gla_createBuffer(
-      COMPUTE_STORAGE_BUFFER, NULL, 3 * 3 * sizeof(float)
+      COMPUTE_STORAGE_BUFFER, NULL, M * N * sizeof(float)
    );
 
    gla_bindComputeStorageBuffer(mat0Id, 0);
    gla_bindComputeStorageBuffer(mat1Id, 1);
    gla_bindComputeStorageBuffer(mat2Id, 2);
 
-   GLC(glDispatchCompute(3, 3, 1));
-
-   sleep(1);
+   GLC(glDispatchCompute(M, N, 1));
 
    gla_bindBuffer(COMPUTE_STORAGE_BUFFER, mat2Id);
 
    float* readData = GLC(glMapBufferRange(
-      COMPUTE_STORAGE_BUFFER, 0, 3 * 3 * sizeof(float), GL_MAP_READ_BIT
+      COMPUTE_STORAGE_BUFFER, 0, M * N * sizeof(float), GL_MAP_READ_BIT
    ));
 
-   puts("read data:");
-   for (int i = 0; i < 3; i++) {
-      for (int j = 0; j < 3; j++) {
-         printf("%3.1f ", readData[i * 3 + j]);
-      }
-      putchar('\n');
-   }
+   memcpy(mat2, readData, M * N * sizeof(float));
 
    bool unmapedSuccess = GLC(glUnmapBuffer(COMPUTE_STORAGE_BUFFER));
    GPUT_ASSERT(unmapedSuccess, "Could not unmap the buffer");
@@ -219,6 +223,44 @@ void gput_test()
    gla_deleteBuffer(mat0Id);
    gla_deleteBuffer(mat1Id);
    gla_deleteBuffer(mat2Id);
+}
+
+static void gput_CPUMatMul()
+{
+   for (int i = 0; i < M; i++) {
+      for (int j = 0; j < N; j++) {
+         mat2[i][j] = 0.0f;
+         for (int k = 0; k < K; k++) {
+            mat2[i][j] += mat0[i][k] * mat1[k][j];
+         }
+      }
+   }
+}
+
+void gput_test(bool useGPU)
+{
+   const char* glVersion = GLC(glGetString(GL_VERSION));
+   GPUT_LOG_INFO("OpenGL version: %s", glVersion);
+
+   const char* glslVersion = GLC(glGetString(GL_SHADING_LANGUAGE_VERSION));
+   GPUT_LOG_INFO("GLSL version: %s", glslVersion);
+
+   srand(clock());
+   matInit((f32*)mat0, M, K);
+   matInit((f32*)mat1, K, N);
+   if (useGPU) {
+      gput_GPUMatMul();
+   }
+   else {
+      gput_CPUMatMul();
+   }
+
+   puts("mat0:");
+   //printMatrix((f32*)mat0, M, K);
+   puts("mat1:");
+   //printMatrix((f32*)mat1, K, N);
+   puts("mat2:");
+   //printMatrix((f32*)mat2, M, N);
 }
 
 bool gput_terminate()
