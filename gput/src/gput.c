@@ -118,9 +118,9 @@ bool gput_init()
    return true;
 }
 
-#define M      200
-#define N      200
-#define K      200
+#define M      1000
+#define N      250 * 4
+#define K      1000
 
 f32 mat0[M][K];
 f32 mat1[K][N];
@@ -158,10 +158,10 @@ static void gput_GPUMatMul()
       "  float matrix0[];\n"
       "};\n"
       "layout(std430, binding = 1) buffer Matrix1 {\n"
-      "  float matrix1[];\n"
+      "  vec4 matrix1[];\n"
       "};\n"
       "layout(std430, binding = 2) buffer Matrix2 {\n"
-      "  float matrix2[];\n"
+      "  vec4 matrix2[];\n"
       "};\n"
       "layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;"
       "void main()\n"
@@ -169,7 +169,7 @@ static void gput_GPUMatMul()
       "  int i = int(gl_WorkGroupID.x);\n"
       "  int j = int(gl_WorkGroupID.y);\n"
       "  int commonDim = uColsCount0;\n"
-      "  float value = 0.0;"
+      "  vec4 value = vec4(0.0, 0.0, 0.0, 0.0);"
       "  for (int k = 0; k < commonDim; k++) {\n"
       "    value += matrix0[(i * uColsCount0) + k] * \n"
       "             matrix1[(k * uColsCount1) + j];\n"
@@ -181,7 +181,7 @@ static void gput_GPUMatMul()
    gla_bindProgram(cmpProgId);
 
    int matsDims[] = {
-      K, N, N
+      K, N / 4, N / 4
    };
 
    GlBuffId matDimsBuffId = gla_createBuffer(
@@ -206,7 +206,7 @@ static void gput_GPUMatMul()
    gla_bindComputeStorageBuffer(mat1Id, 1);
    gla_bindComputeStorageBuffer(mat2Id, 2);
 
-   GLC(glDispatchCompute(M, N, 1));
+   GLC(glDispatchCompute(M, N / 4, 1));
 
    gla_bindBuffer(COMPUTE_STORAGE_BUFFER, mat2Id);
 
@@ -255,11 +255,19 @@ void gput_test(bool useGPU)
       gput_CPUMatMul();
    }
 
-   puts("mat0:");
+   //gput_GPUMatMul();
+   //puts("mat0:");
    //printMatrix((f32*)mat0, M, K);
-   puts("mat1:");
+   //puts("mat1:");
    //printMatrix((f32*)mat1, K, N);
-   puts("mat2:");
+   //puts("mat2:");
+   //printMatrix((f32*)mat2, M, N);
+   //gput_CPUMatMul();
+   //puts("mat0:");
+   //printMatrix((f32*)mat0, M, K);
+   //puts("mat1:");
+   //printMatrix((f32*)mat1, K, N);
+   //puts("mat2:");
    //printMatrix((f32*)mat2, M, N);
 }
 
